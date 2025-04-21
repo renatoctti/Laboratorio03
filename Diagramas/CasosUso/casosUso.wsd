@@ -1,0 +1,33 @@
+@startuml
+' Diagrama de Casos de Uso
+left to right direction
+actor Aluno
+actor Professor
+actor EmpresaParceira
+actor Sistema
+
+Aluno --> (Cadastrar-se no sistema)
+Aluno --> (Fazer login)
+Aluno --> (Consultar extrato de moedas)
+Aluno --> (Trocar moedas por vantagens)
+Aluno --> (Receber notificação de moeda)
+Aluno --> (Receber cupom por email)
+
+Professor --> (Fazer login)
+Professor --> (Distribuir moedas)
+Professor --> (Consultar extrato de transações)
+Professor --> (Escrever mensagem de reconhecimento)
+
+EmpresaParceira --> (Fazer login)
+EmpresaParceira --> (Cadastrar-se no sistema)
+EmpresaParceira --> (Cadastrar vantagens)
+EmpresaParceira --> (Receber notificação de troca)
+EmpresaParceira --> (Receber código da troca)
+
+Sistema --> (Autenticar usuários)
+Sistema --> (Notificar aluno por email)
+Sistema --> (Gerar código da troca)
+Sistema --> (Enviar email ao parceiro)
+Sistema --> (Validar saldos)
+Sistema --> (Registrar transações)
+@enduml
