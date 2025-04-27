@@ -1,0 +1,36 @@
+
+@startuml
+node "Aluno" {
+  [Navegador Web]
+}
+
+node "Professor" {
+  [Navegador Web]
+}
+
+node "EmpresaParceira" {
+  [Navegador Web]
+}
+
+node "Servidor Web" {
+  [Frontend]
+}
+
+node "Servidor de Aplicação" {
+  [Backend API]
+}
+
+node "Banco de Dados" {
+  [MySQL]
+}
+
+node "Servidor SMTP" {
+  [Serviço de Email]
+}
+
+[Navegador Web] --> [Frontend] : HTTPS
+[Frontend] --> [Backend API] : REST API
+
+[Backend API] --> [Banco de Dados] : JDBC/ORM
+[Backend API] --> [Serviço de Email] : SMTP
+@enduml

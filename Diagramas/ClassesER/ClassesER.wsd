@@ -1,0 +1,79 @@
+@startuml
+entity "Usuario" as Usuario {
+  + id_usuario : int <<PK>>
+  email : String
+  senha : String
+  tipo_usuario : String
+}
+
+entity "Aluno" as Aluno {
+  + id_aluno : int <<PK, FK>>
+  nome : String
+  cpf : String
+  rg : String
+  endereco : String
+  curso : String
+  saldo : int
+  id_instituicao : int <<FK>>
+}
+
+entity "Professor" as Professor {
+  + id_professor : int <<PK, FK>>
+  nome : String
+  cpf : String
+  departamento : String
+  saldo : int
+  id_instituicao : int <<FK>>
+}
+
+entity "EmpresaParceira" as EmpresaParceira {
+  + id_empresa : int <<PK, FK>>
+  nome : String
+}
+
+entity "Instituicao" as Instituicao {
+  + id_instituicao : int <<PK>>
+  nome : String
+}
+
+entity "Transacao" as Transacao {
+  + id_transacao : int <<PK>>
+  data : Date
+  valor : int
+  descricao : String
+  origem_id : int <<FK>>
+  destino_id : int <<FK>>
+}
+
+entity "Vantagem" as Vantagem {
+  + id_vantagem : int <<PK>>
+  descricao : String
+  foto : String
+  custo : int
+  id_empresa : int <<FK>>
+}
+
+entity "Cupom" as Cupom {
+  + id_cupom : int <<PK>>
+  codigo : String
+  data_geracao : Date
+  validade : Date
+  id_vantagem : int <<FK>>
+  id_aluno : int <<FK>>
+}
+
+Usuario ||--o{ Aluno
+Usuario ||--o{ Professor
+Usuario ||--o{ EmpresaParceira
+
+Aluno }o--|| Instituicao
+Professor }o--|| Instituicao
+
+Transacao }o--|| Usuario : origem_id
+Transacao }o--|| Usuario : destino_id
+
+EmpresaParceira ||--o{ Vantagem
+
+Aluno ||--o{ Cupom
+Vantagem ||--o{ Cupom
+@enduml
