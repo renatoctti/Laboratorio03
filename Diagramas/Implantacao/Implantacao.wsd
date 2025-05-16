@@ -1,8 +1,6 @@
 
-@startuml
-node "Aluno" {
-  [Navegador Web]
-}
+@startuml Diagrma de Implantação
+
 
 node "Professor" {
   [Navegador Web]
@@ -28,7 +26,6 @@ node "Servidor SMTP" {
   [Serviço de Email]
 }
 
-[Navegador Web] --> [Frontend] : HTTPS
 [Frontend] --> [Backend API] : REST API
 
 [Backend API] --> [Banco de Dados] : JDBC/ORM

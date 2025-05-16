@@ -1,14 +1,13 @@
-@startuml
-' Diagrama de Classes
+@startuml  Diagrama de Classes
 class Usuario {
   -email: String
   -senha: String
+  -nome: String
+  -CPF: String 
   +login(): boolean
 }
 
 class Aluno {
-  -nome: String
-  -cpf: String
   -rg: String
   -endereco: String
   -curso: String
@@ -19,8 +18,6 @@ class Aluno {
 }
 
 class Professor {
-  -nome: String
-  -cpf: String
   -departamento: String
   -saldo: int
   +distribuirMoedas(aluno: Aluno, qtd: int, motivo: String): Transacao
@@ -59,8 +56,8 @@ class Transacao {
   -data: Date
   -valor: int
   -descricao: String
-  -origem: String
-  -destino: String
+  -origem: Aluno
+  -destino: Aluno
 }
 
 Usuario <|-- Aluno

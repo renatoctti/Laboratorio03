@@ -1,4 +1,4 @@
-@startuml
+@startuml ER
 entity "Usuario" as Usuario {
   + id_usuario : int <<PK>>
   email : String

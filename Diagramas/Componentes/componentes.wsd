@@ -1,30 +1,21 @@
-@startuml
-' Diagrama de Componentes
+@startuml Diagrama de Componentes
 package "Frontend" {
   [App Web] --> [API Backend]
 }
 
 package "Backend" {
   [API Backend] --> [AuthService]
-  [API Backend] --> [AlunoService]
-  [API Backend] --> [ProfessorService]
-  [API Backend] --> [EmpresaService]
   [API Backend] --> [EmailService]
   [API Backend] --> [TransacaoService]
   [API Backend] --> [VantagemService]
   [API Backend] --> [CupomService]
-  [API Backend] --> [InstituicaoService]
 }
 
 package "Database" {
   [Banco de Dados]
 }
 
-[AlunoService] --> [Banco de Dados]
-[ProfessorService] --> [Banco de Dados]
-[EmpresaService] --> [Banco de Dados]
 [TransacaoService] --> [Banco de Dados]
 [VantagemService] --> [Banco de Dados]
 [CupomService] --> [Banco de Dados]
-[InstituicaoService] --> [Banco de Dados]
 @enduml
