@@ -1,9 +1,9 @@
-package demo.src.main.java.com.example.view;
+package com.example.view;
 
 import java.util.Scanner;
 
-import demo.src.main.java.com.example.controller.EstudanteController;
-import demo.src.main.java.com.example.model.Estudante;
+import com.example.controller.EstudanteController;
+import com.example.model.Estudante;
 
 public class MainView {
    private static EstudanteController controller = new EstudanteController();

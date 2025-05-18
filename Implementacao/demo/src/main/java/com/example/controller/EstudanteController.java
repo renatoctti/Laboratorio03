@@ -1,9 +1,9 @@
-package demo.src.main.java.com.example.controller;
+package com.example.controller;
 
 import java.util.List;
 
-import demo.src.main.java.com.example.dao.EstudanteDAO;
-import demo.src.main.java.com.example.model.Estudante;
+import com.example.dao.EstudanteDAO;
+import com.example.model.Estudante;
 
 public class EstudanteController {
    private EstudanteDAO dao = new EstudanteDAO();

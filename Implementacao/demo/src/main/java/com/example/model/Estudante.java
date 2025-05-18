@@ -1,4 +1,4 @@
-package demo.src.main.java.com.example.model;
+package com.example.model;
 
 public class Estudante {
    private int id;

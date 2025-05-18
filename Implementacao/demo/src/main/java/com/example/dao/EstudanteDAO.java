@@ -1,11 +1,11 @@
-package demo.src.main.java.com.example.dao;
+package com.example.dao;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import demo.src.main.java.com.example.model.Estudante;
-import demo.src.main.java.com.example.util.Conexao;
+import com.example.model.Estudante;
+import com.example.util.Conexao;
 
 public class EstudanteDAO {
 

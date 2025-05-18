@@ -1,6 +1,6 @@
-package demo.src.main.java.com.example;
+package com.example;
 
-import demo.src.main.java.com.example.view.MainView;
+import com.example.view.MainView;
 
 public class App {
     public static void main(String[] args) {
