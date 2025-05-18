@@ -62,4 +62,13 @@ public class EstudanteDAO {
       }
       return null;
    }
+
+   public void remover(int id) throws Exception {
+    String sql = "DELETE FROM estudante WHERE id = ?";
+    try (Connection conn = Conexao.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setInt(1, id);
+        stmt.execute();
+    }
+}
 }

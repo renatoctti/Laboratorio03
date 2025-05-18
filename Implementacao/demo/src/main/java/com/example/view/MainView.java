@@ -2,53 +2,46 @@ package com.example.view;
 
 import java.util.Scanner;
 
-import com.example.controller.EstudanteController;
-import com.example.model.Estudante;
-
 public class MainView {
-   private static EstudanteController controller = new EstudanteController();
-
-   public static void menu() throws Exception {
-      Scanner sc = new Scanner(System.in);
-      int opcao;
-      do {
-         System.out.println("\n--- Moeda Estudantil ---");
-         System.out.println("1. Cadastrar estudante");
-         System.out.println("2. Adicionar moedas");
-         System.out.println("3. Consultar saldo");
-         System.out.println("4. Listar estudantes");
-         System.out.println("0. Sair");
-         opcao = sc.nextInt();
-
-         switch (opcao) {
-            case 1:
-               System.out.print("Nome: ");
-               sc.nextLine(); // limpar buffer
-               String nome = sc.nextLine();
-               controller.cadastrar(nome);
-               break;
-            case 2:
-               System.out.print("ID do estudante: ");
-               int id = sc.nextInt();
-               System.out.print("Quantidade de moedas: ");
-               int qtd = sc.nextInt();
-               controller.adicionarMoedas(id, qtd);
-               break;
-            case 3:
-               System.out.print("ID do estudante: ");
-               Estudante e = controller.consultar(sc.nextInt());
-               if (e != null)
-                  System.out.println(e.getNome() + " possui " + e.getSaldo() + " moedas.");
-               else
-                  System.out.println("Estudante não encontrado.");
-               break;
-            case 4:
-               for (Estudante est : controller.listar())
-                  System.out.println(est.getId() + " - " + est.getNome() + " (" + est.getSaldo() + " moedas)");
-               break;
-         }
-      } while (opcao != 0);
-
-      sc.close();
-   }
+    private static Scanner sc = new Scanner(System.in);
+    
+    public static void main(String[] args) {
+        menu();
+    }
+    
+    public static void menu() {
+        int opcao;
+        do {
+            System.out.println("\n--- Sistema de Moeda Estudantil ---");
+            System.out.println("1. Gestão de Estudantes");
+            System.out.println("2. Gestão de Empresas Parceiras");
+            System.out.println("0. Sair");
+            
+            try {
+                opcao = Integer.parseInt(sc.nextLine());
+                
+                switch (opcao) {
+                    case 1:
+                        AlunoView.menu();
+                        break;
+                    case 2:
+                        EmpresaParceiraView.menu();
+                        break;
+                    case 0:
+                        System.out.println("Saindo do sistema...");
+                        break;
+                    default:
+                        System.out.println("Opção inválida!");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Por favor, digite um número válido.");
+                opcao = -1;
+            } catch (Exception e) {
+                System.out.println("Erro: " + e.getMessage());
+                opcao = -1;
+            }
+        } while (opcao != 0);
+        
+        sc.close();
+    }
 }

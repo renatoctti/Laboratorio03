@@ -24,4 +24,8 @@ public class EstudanteController {
    public List<Estudante> listar() throws Exception {
       return dao.listarTodos();
    }
+
+   public void remover(int id) throws Exception {
+    dao.remover(id);
+}
 }
