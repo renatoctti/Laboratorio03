@@ -2,10 +2,6 @@ package demo.src.main.java.com.example;
 
 import demo.src.main.java.com.example.view.MainView;
 
-/**
- * Hello world!
- *
- */
 public class App {
     public static void main(String[] args) {
         try {
