@@ -9,7 +9,6 @@ public class Conexao {
    private static final String PASSWORD = "SQL.2917";
 
    public static Connection getConnection() throws Exception {
-      Class.forName("com.mysql.cj.jdbc.Driver");
       return DriverManager.getConnection(URL, USER, PASSWORD);
    }
 }
