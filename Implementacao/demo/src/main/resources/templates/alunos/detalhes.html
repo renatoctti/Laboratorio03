@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalhes do Aluno - Sistema de Moeda Estudantil</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container">
+        <a class="navbar-brand" href="/">
+          <i class="bi bi-coin"></i> Sistema de Moeda Estudantil
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="bi bi-house"></i> Início
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/alunos">
+                <i class="bi bi-people"></i> Alunos
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/empresas">
+                <i class="bi bi-building"></i> Empresas
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container mt-4">
+      <!-- Mensagens de feedback -->
+      <div
+        th:if="${sucesso}"
+        class="alert alert-success alert-dismissible fade show"
+        role="alert"
+      >
+        <i class="bi bi-check-circle"></i> <span th:text="${sucesso}"></span>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+        ></button>
+      </div>
+
+      <div
+        th:if="${erro}"
+        class="alert alert-danger alert-dismissible fade show"
+        role="alert"
+      >
+        <i class="bi bi-exclamation-triangle"></i>
+        <span th:text="${erro}"></span>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+        ></button>
+      </div>
+
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="mb-0">
+                <i class="bi bi-person"></i> Detalhes do Aluno
+              </h4>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <h6>Informações Pessoais</h6>
+                  <table class="table table-borderless">
+                    <tr>
+                      <td><strong>Nome:</strong></td>
+                      <td th:text="${aluno.nome}"></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Email:</strong></td>
+                      <td th:text="${aluno.email}"></td>
+                    </tr>
+                    <tr>
+                      <td><strong>CPF:</strong></td>
+                      <td th:text="${aluno.cpf}"></td>
+                    </tr>
+                    <tr>
+                      <td><strong>RG:</strong></td>
+                      <td th:text="${aluno.rg}"></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Endereço:</strong></td>
+                      <td th:text="${aluno.endereco}"></td>
+                    </tr>
+                  </table>
+                </div>
+                <div class="col-md-6">
+                  <h6>Informações Acadêmicas</h6>
+                  <table class="table table-borderless">
+                    <tr>
+                      <td><strong>Curso:</strong></td>
+                      <td th:text="${aluno.curso}"></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Instituição:</strong></td>
+                      <td
+                        th:text="${aluno.instituicao != null ? aluno.instituicao.nome : 'N/A'}"
+                      ></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Saldo de Moedas:</strong></td>
+                      <td>
+                        <span
+                          class="badge bg-success fs-6"
+                          th:text="${aluno.saldoMoedas} + ' moedas'"
+                        ></span>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-between mt-4">
+                <a href="/alunos" class="btn btn-secondary">
+                  <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <div>
+                  <a
+                    th:href="@{/alunos/editar/{id}(id=${aluno.id})}"
+                    class="btn btn-warning"
+                  >
+                    <i class="bi bi-pencil"></i> Editar
+                  </a>
+                  <a
+                    th:href="@{/alunos/excluir/{id}(id=${aluno.id})}"
+                    class="btn btn-danger ms-2"
+                    onclick="return confirm('Tem certeza que deseja excluir este aluno?')"
+                  >
+                    <i class="bi bi-trash"></i> Excluir
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="bg-light mt-5 py-4">
+      <div class="container text-center">
+        <p class="mb-0">
+          &copy; 2024 Sistema de Moeda Estudantil. Todos os direitos reservados.
+        </p>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

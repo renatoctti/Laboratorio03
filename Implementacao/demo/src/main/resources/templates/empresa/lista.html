@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lista de Empresas Parceiras - Sistema de Moeda Estudantil</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container">
+        <a class="navbar-brand" href="/">
+          <i class="bi bi-coin"></i> Sistema de Moeda Estudantil
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="bi bi-house"></i> Início
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/alunos">
+                <i class="bi bi-people"></i> Alunos
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/empresas">
+                <i class="bi bi-building"></i> Empresas
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container mt-4">
+      <!-- Mensagens de feedback -->
+      <div
+        th:if="${sucesso}"
+        class="alert alert-success alert-dismissible fade show"
+        role="alert"
+      >
+        <i class="bi bi-check-circle"></i> <span th:text="${sucesso}"></span>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+        ></button>
+      </div>
+
+      <div
+        th:if="${erro}"
+        class="alert alert-danger alert-dismissible fade show"
+        role="alert"
+      >
+        <i class="bi bi-exclamation-triangle"></i>
+        <span th:text="${erro}"></span>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+        ></button>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-building"></i> Lista de Empresas Parceiras</h2>
+        <a href="/empresas/nova" class="btn btn-success">
+          <i class="bi bi-plus"></i> Nova Empresa
+        </a>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div
+            th:if="${empresas == null or #lists.isEmpty(empresas)}"
+            class="text-center py-4"
+          >
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <p class="mt-3 text-muted">
+              Nenhuma empresa parceira cadastrada ainda.
+            </p>
+            <a href="/empresas/nova" class="btn btn-success">
+              <i class="bi bi-plus"></i> Cadastrar primeira empresa
+            </a>
+          </div>
+
+          <div
+            th:if="${empresas != null and !#lists.isEmpty(empresas)}"
+            class="table-responsive"
+          >
+            <table class="table table-striped table-hover">
+              <thead class="table-dark">
+                <tr>
+                  <th>ID</th>
+                  <th>Nome</th>
+                  <th>Email</th>
+                  <th>CNPJ</th>
+                  <th>Telefone</th>
+                  <th>Endereço</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="empresa : ${empresas}">
+                  <td th:text="${empresa.id}"></td>
+                  <td th:text="${empresa.nome}"></td>
+                  <td th:text="${empresa.email}"></td>
+                  <td th:text="${empresa.cnpj}"></td>
+                  <td th:text="${empresa.telefone}"></td>
+                  <td th:text="${empresa.endereco}"></td>
+                  <td>
+                    <div class="btn-group" role="group">
+                      <a
+                        th:href="@{/empresas/detalhes/{id}(id=${empresa.id})}"
+                        class="btn btn-sm btn-outline-info"
+                        title="Detalhes"
+                      >
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      <a
+                        th:href="@{/empresas/editar/{id}(id=${empresa.id})}"
+                        class="btn btn-sm btn-outline-warning"
+                        title="Editar"
+                      >
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <a
+                        th:href="@{/empresas/excluir/{id}(id=${empresa.id})}"
+                        class="btn btn-sm btn-outline-danger"
+                        title="Excluir"
+                        onclick="return confirm('Tem certeza que deseja excluir esta empresa?')"
+                      >
+                        <i class="bi bi-trash"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="bg-light mt-5 py-4">
+      <div class="container text-center">
+        <p class="mb-0">
+          &copy; 2024 Sistema de Moeda Estudantil. Todos os direitos reservados.
+        </p>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
