@@ -22,13 +22,13 @@ public class EmpresaParceiraController {
     @GetMapping
     public String listar(Model model) {
         model.addAttribute("empresas", empresaService.findAll());
-        return "empresas/lista";
+        return "empresa/lista";
     }
     
     @GetMapping("/nova")
     public String nova(Model model) {
         model.addAttribute("empresa", new EmpresaParceira());
-        return "empresas/form";
+        return "empresa/form";
     }
     
     @GetMapping("/editar/{id}")
@@ -36,11 +36,11 @@ public class EmpresaParceiraController {
         return empresaService.findById(id)
             .map(empresa -> {
                 model.addAttribute("empresa", empresa);
-                return "empresas/form";
+                return "empresa/form";
             })
             .orElseGet(() -> {
                 redirectAttributes.addFlashAttribute("erro", "Empresa não encontrada!");
-                return "redirect:/empresas";
+                return "redirect:/empresa";
             });
     }
     

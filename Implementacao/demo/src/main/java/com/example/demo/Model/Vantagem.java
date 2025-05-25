@@ -18,24 +18,21 @@ public class Vantagem {
     @Column(nullable = false)
     private String descricao;
     
-    @Column(columnDefinition = "TEXT")
-    private String foto;
     
     @NotNull(message = "Custo é obrigatório")
     @Positive(message = "Custo deve ser positivo")
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal custoMoedas;
     
-    @ManyToOne
-    @JoinColumn(name = "empresa_id", nullable = false)
-    private EmpresaParceira empresa;
+    @ManyToOne(fetch = FetchType.EAGER) // Carregamento imediato da empresa
+    @JoinColumn(name = "empresa_id")
+    private EmpresaParceira empresa; // Deve ter getters/setters
     
     // Constructors
     public Vantagem() {}
     
     public Vantagem(String descricao, String foto, BigDecimal custoMoedas, EmpresaParceira empresa) {
         this.descricao = descricao;
-        this.foto = foto;
         this.custoMoedas = custoMoedas;
         this.empresa = empresa;
     }
@@ -46,9 +43,6 @@ public class Vantagem {
     
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
-    
-    public String getFoto() { return foto; }
-    public void setFoto(String foto) { this.foto = foto; }
     
     public BigDecimal getCustoMoedas() { return custoMoedas; }
     public void setCustoMoedas(BigDecimal custoMoedas) { this.custoMoedas = custoMoedas; }
