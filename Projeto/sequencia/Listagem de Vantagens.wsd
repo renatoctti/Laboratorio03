@@ -1,0 +1,16 @@
+@startuml
+actor Aluno
+participant "Frontend" as FE
+participant "API Backend" as BE
+participant "VantagemService" as VS
+participant "Banco de Dados" as DB
+
+Aluno -> FE : Solicita listagem de vantagens
+FE -> BE : GET /vantagens
+BE -> VS : listarVantagens()
+VS -> DB : SELECT * FROM Vantagem
+DB --> VS : Lista de vantagens
+VS --> BE : Lista de vantagens
+BE --> FE : resposta 200 OK + dados
+FE --> Aluno : Exibe lista de vantagens disponíveis
+@enduml

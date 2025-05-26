@@ -1,0 +1,16 @@
+@startuml
+actor EmpresaParceira
+participant "Frontend" as FE
+participant "API Backend" as BE
+participant "VantagemService" as VS
+participant "Banco de Dados" as DB
+
+EmpresaParceira -> FE : Preenche formulário de cadastro de vantagem
+FE -> BE : POST /vantagens
+BE -> VS : cadastrarVantagem(dadosVantagem)
+VS -> DB : INSERT INTO Vantagem
+DB --> VS : Confirma inserção
+VS --> BE : sucesso
+BE --> FE : resposta 201 Created
+FE --> EmpresaParceira : Exibe mensagem de sucesso
+@enduml
