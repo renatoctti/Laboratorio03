@@ -3,10 +3,11 @@ package com.example.demo.DAO;
 import com.example.demo.Model.Vantagem;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
-import java.util.Collections;
+import java.util.ArrayList;
 
 @Repository
 public class VantagemDAOImpl implements VantagemDAO {
@@ -17,40 +18,96 @@ public class VantagemDAOImpl implements VantagemDAO {
     @Override
     @Transactional(readOnly = true)
     public Vantagem findById(Long id) {
-        return entityManager.find(Vantagem.class, id);
+        try {
+            System.out.println("DEBUG DAO: Buscando vantagem por ID: " + id);
+            Vantagem vantagem = entityManager.find(Vantagem.class, id);
+            System.out.println("DEBUG DAO: Vantagem encontrada: " + (vantagem != null ? vantagem.getNome() : "null"));
+            return vantagem;
+        } catch (Exception e) {
+            System.err.println("ERRO DAO findById: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Vantagem> findAll() {
         try {
-            return entityManager.createQuery(
-                "SELECT DISTINCT v FROM Vantagem v LEFT JOIN FETCH v.empresa", 
-                Vantagem.class)
-                .getResultList();
+            System.out.println("DEBUG DAO: Iniciando busca de todas as vantagens...");
+            
+            // Query com JOIN FETCH para carregar a empresa junto
+            String jpql = "SELECT v FROM Vantagem v LEFT JOIN FETCH v.empresa ORDER BY v.id DESC";
+            TypedQuery<Vantagem> query = entityManager.createQuery(jpql, Vantagem.class);
+            
+            List<Vantagem> result = query.getResultList();
+            
+            // getResultList() nunca retorna null, mas vamos garantir
+            if (result == null) {
+                result = new ArrayList<>();
+            }
+            
+            System.out.println("DEBUG DAO: Encontradas " + result.size() + " vantagens");
+            
+            // Log detalhado de cada vantagem
+            for (Vantagem v : result) {
+                System.out.println("DEBUG DAO: Vantagem - ID: " + v.getId() + 
+                                 ", Nome: " + v.getNome() + 
+                                 ", Descrição: " + v.getDescricao() + 
+                                 ", Custo: " + v.getCustoMoedas() +
+                                 ", Empresa: " + (v.getEmpresa() != null ? v.getEmpresa().getNome() : "null"));
+            }
+            
+            return result;
         } catch (Exception e) {
+            System.err.println("ERRO CRÍTICO DAO findAll: " + e.getMessage());
             e.printStackTrace();
-            return Collections.emptyList();
+            // Sempre retornar lista vazia em caso de erro
+            return new ArrayList<>();
         }
     }
 
     @Override
     @Transactional
     public Vantagem save(Vantagem vantagem) {
-        if (vantagem.getId() == null) {
-            entityManager.persist(vantagem);
+        try {
+            System.out.println("DEBUG DAO: Salvando vantagem: " + vantagem.getNome());
+            
+            if (vantagem.getId() == null) {
+                entityManager.persist(vantagem);
+                entityManager.flush();
+                System.out.println("DEBUG DAO: Vantagem persistida com ID: " + vantagem.getId());
+            } else {
+                vantagem = entityManager.merge(vantagem);
+                entityManager.flush();
+                System.out.println("DEBUG DAO: Vantagem atualizada com ID: " + vantagem.getId());
+            }
+            
             return vantagem;
-        } else {
-            return entityManager.merge(vantagem);
+        } catch (Exception e) {
+            System.err.println("ERRO DAO save: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Erro ao salvar vantagem: " + e.getMessage(), e);
         }
     }
 
     @Override
     @Transactional
     public void deleteById(Long id) {
-        Vantagem vantagem = findById(id);
-        if (vantagem != null) {
-            entityManager.remove(vantagem);
+        try {
+            System.out.println("DEBUG DAO: Deletando vantagem ID: " + id);
+            Vantagem vantagem = findById(id);
+            if (vantagem != null) {
+                entityManager.remove(vantagem);
+                entityManager.flush();
+                System.out.println("DEBUG DAO: Vantagem removida com sucesso");
+            } else {
+                System.out.println("DEBUG DAO: Vantagem não encontrada para remoção");
+            }
+        } catch (Exception e) {
+            System.err.println("ERRO DAO deleteById: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Erro ao deletar vantagem: " + e.getMessage(), e);
         }
     }
 }

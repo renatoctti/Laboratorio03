@@ -11,6 +11,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.ArrayList;
 
 @Controller
 @RequestMapping("/vantagens")
@@ -25,112 +26,193 @@ public class VantagemController {
       this.empresaParceiraService = empresaParceiraService;
    }
 
-   // Lista todas as vantagens
    @GetMapping
    public String listarVantagens(Model model) {
       try {
-         System.out.println("DEBUG: Iniciando busca por vantagens..."); // Log
+         System.out.println("=== DEBUG Controller: Iniciando listagem de vantagens ===");
+
          List<Vantagem> vantagens = vantagemService.findAll();
-         System.out.println("DEBUG: Vantagens encontradas: " + vantagens.size()); // Log
+         System.out.println("DEBUG Controller: Vantagens recebidas: " + vantagens.size());
 
          model.addAttribute("vantagens", vantagens);
+         model.addAttribute("totalVantagens", vantagens.size());
+
+         System.out.println("=== DEBUG Controller: Finalizando listagem com sucesso ===");
          return "vantagens/lista";
+
       } catch (Exception e) {
-         System.err.println("ERRO GRAVE: " + e.getMessage()); // Log vermelho
-         e.printStackTrace(); // Stacktrace completo
-         model.addAttribute("erro", "Sistema temporariamente indisponível");
-         return "error"; // Página de erro genérica
+         System.err.println("=== ERRO CRÍTICO Controller: " + e.getMessage() + " ===");
+         e.printStackTrace();
+
+         // Em caso de erro, criar lista vazia e mostrar erro
+         model.addAttribute("vantagens", new ArrayList<>());
+         model.addAttribute("totalVantagens", 0);
+         model.addAttribute("erro", "Erro ao carregar vantagens: " + e.getMessage());
+
+         return "vantagens/lista";
       }
    }
 
-   // Formulário de cadastro
    @GetMapping("/cadastrar")
    public String mostrarFormCadastro(Model model) {
-      model.addAttribute("empresas", empresaParceiraService.findAll());
-      model.addAttribute("vantagem", new Vantagem());
-      return "vantagens/cadastro";
+      try {
+         System.out.println("DEBUG Controller: Carregando formulário de cadastro");
+
+         List<EmpresaParceira> empresas = empresaParceiraService.findAll();
+         model.addAttribute("empresas", empresas != null ? empresas : new ArrayList<>());
+         model.addAttribute("vantagem", new Vantagem());
+
+         return "vantagens/cadastro";
+      } catch (Exception e) {
+         System.err.println("ERRO Controller cadastro: " + e.getMessage());
+         e.printStackTrace();
+         model.addAttribute("erro", "Erro ao carregar formulário: " + e.getMessage());
+         return "error";
+      }
    }
 
-   // Processa o cadastro
    @PostMapping("/cadastrar")
    public String processarCadastro(
-         @RequestParam("empresaId") Long empresaId,
+         @RequestParam("nome") String nome,
          @RequestParam("descricao") String descricao,
-         @RequestParam("custo") String custoStr, // Recebe como String para tratamento seguro
+         @RequestParam("custo") String custoStr,
+         @RequestParam(value = "empresaId", required = false) Long empresaId,
          RedirectAttributes redirectAttributes) {
 
       try {
+         System.out.println("DEBUG Controller: Processando cadastro");
+         System.out.println("Nome: " + nome);
+         System.out.println("Descrição: " + descricao);
+         System.out.println("Custo: " + custoStr);
+         System.out.println("Empresa ID: " + empresaId);
+
          BigDecimal custoMoedas = parseCusto(custoStr);
-         EmpresaParceira empresa = empresaParceiraService.findById(empresaId)
-               .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
 
-         Vantagem vantagem = new Vantagem();
-         vantagem.setDescricao(descricao);
-         vantagem.setCustoMoedas(custoMoedas);
-         vantagem.setEmpresa(empresa);
+         Vantagem vantagem = vantagemService.cadastrarVantagem(nome, descricao, custoMoedas, empresaId);
+         System.out.println("DEBUG Controller: Vantagem salva com ID: " + vantagem.getId());
 
-         vantagemService.save(vantagem);
-         redirectAttributes.addFlashAttribute("sucesso", "Vantagem cadastrada com sucesso!");
+         redirectAttributes.addFlashAttribute("sucesso", "Vantagem '" + nome + "' cadastrada com sucesso!");
+         return "redirect:/vantagens";
+
       } catch (Exception e) {
-         redirectAttributes.addFlashAttribute("erro", "Erro: " + e.getMessage());
+         System.err.println("ERRO Controller processarCadastro: " + e.getMessage());
+         e.printStackTrace();
+         redirectAttributes.addFlashAttribute("erro", "Erro ao cadastrar: " + e.getMessage());
+         return "redirect:/vantagens/cadastrar";
       }
-
-      return "redirect:/vantagens/cadastrar";
    }
 
-   // Detalhes de uma vantagem@GetMapping("/{id}")
+   @GetMapping("/{id}")
    public String detalharVantagem(@PathVariable Long id, Model model) {
-      Vantagem vantagem = vantagemService.findById(id);
-      if (vantagem == null) {
-         throw new RuntimeException("Vantagem não encontrada");
+      try {
+         System.out.println("DEBUG Controller: Detalhando vantagem ID: " + id);
+
+         Vantagem vantagem = vantagemService.findById(id);
+         if (vantagem == null) {
+            throw new RuntimeException("Vantagem não encontrada");
+         }
+
+         model.addAttribute("vantagem", vantagem);
+         return "vantagens/detalhes";
+
+      } catch (Exception e) {
+         System.err.println("ERRO Controller detalhar: " + e.getMessage());
+         e.printStackTrace();
+         model.addAttribute("erro", "Vantagem não encontrada");
+         return "error";
       }
-      model.addAttribute("vantagem", vantagem);
-      return "vantagens/detalhes";
    }
 
-   // Formulário de edição
    @GetMapping("/editar/{id}")
    public String mostrarFormEdicao(@PathVariable Long id, Model model) {
-      Vantagem vantagem = vantagemService.findById(id);
-      if (vantagem == null) {
-         throw new RuntimeException("Vantagem não encontrada");
+      try {
+         System.out.println("DEBUG Controller: Carregando edição para ID: " + id);
+
+         Vantagem vantagem = vantagemService.findById(id);
+         if (vantagem == null) {
+            throw new RuntimeException("Vantagem não encontrada");
+         }
+
+         List<EmpresaParceira> empresas = empresaParceiraService.findAll();
+
+         model.addAttribute("vantagem", vantagem);
+         model.addAttribute("empresas", empresas != null ? empresas : new ArrayList<>());
+
+         return "vantagens/editar";
+
+      } catch (Exception e) {
+         System.err.println("ERRO Controller editar form: " + e.getMessage());
+         e.printStackTrace();
+         model.addAttribute("erro", "Vantagem não encontrada");
+         return "error";
       }
-      model.addAttribute("vantagem", vantagem);
-      model.addAttribute("empresas", empresaParceiraService.findAll());
-      return "vantagens/editar";
    }
 
-   // Processa a edição
    @PostMapping("/editar/{id}")
    public String processarEdicao(
          @PathVariable Long id,
-         @ModelAttribute Vantagem vantagem,
+         @RequestParam("nome") String nome,
+         @RequestParam("descricao") String descricao,
+         @RequestParam("custo") String custoStr,
+         @RequestParam(value = "empresaId", required = false) Long empresaId,
          RedirectAttributes redirectAttributes) {
+
       try {
-         vantagem.setId(id);
+         System.out.println("DEBUG Controller: Processando edição para ID: " + id);
+
+         Vantagem vantagem = vantagemService.findById(id);
+         if (vantagem == null) {
+            throw new RuntimeException("Vantagem não encontrada");
+         }
+
+         BigDecimal custoMoedas = parseCusto(custoStr);
+
+         vantagem.setNome(nome);
+         vantagem.setDescricao(descricao);
+         vantagem.setCustoMoedas(custoMoedas);
+
+         if (empresaId != null) {
+            EmpresaParceira empresa = empresaParceiraService.findById(empresaId)
+                  .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+            vantagem.setEmpresa(empresa);
+         } else {
+            vantagem.setEmpresa(null);
+         }
+
          vantagemService.save(vantagem);
          redirectAttributes.addFlashAttribute("sucesso", "Vantagem atualizada com sucesso!");
+         return "redirect:/vantagens/" + id;
+
       } catch (Exception e) {
+         System.err.println("ERRO Controller processar edição: " + e.getMessage());
+         e.printStackTrace();
          redirectAttributes.addFlashAttribute("erro", "Erro ao atualizar: " + e.getMessage());
+         return "redirect:/vantagens/editar/" + id;
       }
-      return "redirect:/vantagens/" + id;
    }
 
-   // Exclui uma vantagem
    @PostMapping("/excluir/{id}")
    public String excluirVantagem(@PathVariable Long id, RedirectAttributes redirectAttributes) {
       try {
+         System.out.println("DEBUG Controller: Excluindo vantagem ID: " + id);
+
          vantagemService.deleteById(id);
          redirectAttributes.addFlashAttribute("sucesso", "Vantagem excluída com sucesso!");
+
       } catch (Exception e) {
+         System.err.println("ERRO Controller excluir: " + e.getMessage());
+         e.printStackTrace();
          redirectAttributes.addFlashAttribute("erro", "Erro ao excluir: " + e.getMessage());
       }
+
       return "redirect:/vantagens";
    }
 
-   // Método auxiliar para parse seguro do valor monetário
    private BigDecimal parseCusto(String custoStr) {
       try {
+         if (custoStr == null || custoStr.trim().isEmpty()) {
+            throw new RuntimeException("Custo é obrigatório");
+         }
          return new BigDecimal(custoStr.replace(",", "."));
       } catch (NumberFormatException e) {
          throw new RuntimeException("Valor monetário inválido. Use números com ponto ou vírgula decimal.");

@@ -9,4 +9,3 @@ public interface VantagemDAO {
     List<Vantagem> findAll();
     void deleteById(Long id);
 }
-
