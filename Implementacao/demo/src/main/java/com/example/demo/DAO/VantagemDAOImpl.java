@@ -1,6 +1,5 @@
 package com.example.demo.DAO;
 
-import com.example.demo.DAO.VantagemDAO;
 import com.example.demo.Model.Vantagem;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

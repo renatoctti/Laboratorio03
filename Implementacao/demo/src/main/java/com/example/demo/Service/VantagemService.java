@@ -1,7 +1,7 @@
 package com.example.demo.Service;
 
 import com.example.demo.DAO.EmpresaParceiraDAO;
-import com.example.demo.DAO.VantagemDAO;
+import com.example.demo.DAO.VantagemDAOImpl;
 import com.example.demo.Model.EmpresaParceira;
 import com.example.demo.Model.Vantagem;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,7 @@ import java.util.List;
 public class VantagemService {
 
    @Autowired
-   private VantagemDAO vantagemDAO;
+   private VantagemDAOImpl vantagemDAO;
 
    @Autowired
    private EmpresaParceiraDAO empresaDAO;
