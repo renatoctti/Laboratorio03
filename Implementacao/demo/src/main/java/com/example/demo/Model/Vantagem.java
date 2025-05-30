@@ -20,7 +20,11 @@ public class Vantagem {
     @Column(name = "custo_moedas", nullable = false, precision = 10, scale = 2)
     private BigDecimal custoMoedas;
 
-    @ManyToOne(fetch = FetchType.EAGER) // Mudei para EAGER para evitar LazyInitializationException
+    // Novo atributo para a URL da imagem
+    @Column(name = "url_imagem", length = 1024) // Defina um tamanho adequado para URLs
+    private String urlImagem;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "empresa_id")
     private EmpresaParceira empresa;
 
@@ -28,10 +32,11 @@ public class Vantagem {
     public Vantagem() {
     }
 
-    public Vantagem(String nome, String descricao, BigDecimal custoMoedas, EmpresaParceira empresa) {
+    public Vantagem(String nome, String descricao, BigDecimal custoMoedas, String urlImagem, EmpresaParceira empresa) {
         this.nome = nome;
         this.descricao = descricao;
         this.custoMoedas = custoMoedas;
+        this.urlImagem = urlImagem; // Adicione ao construtor
         this.empresa = empresa;
     }
 
@@ -68,6 +73,15 @@ public class Vantagem {
         this.custoMoedas = custoMoedas;
     }
 
+    // Novo getter e setter para urlImagem
+    public String getUrlImagem() {
+        return urlImagem;
+    }
+
+    public void setUrlImagem(String urlImagem) {
+        this.urlImagem = urlImagem;
+    }
+
     public EmpresaParceira getEmpresa() {
         return empresa;
     }
@@ -83,6 +97,7 @@ public class Vantagem {
                 ", nome='" + nome + '\'' +
                 ", descricao='" + descricao + '\'' +
                 ", custoMoedas=" + custoMoedas +
+                ", urlImagem='" + urlImagem + '\'' + // Adicione ao toString
                 ", empresa=" + (empresa != null ? empresa.getNome() : "null") +
                 '}';
     }

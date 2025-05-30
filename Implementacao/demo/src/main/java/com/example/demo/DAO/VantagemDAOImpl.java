@@ -17,7 +17,7 @@ public class VantagemDAOImpl implements VantagemDAO {
 
     @Override
     @Transactional(readOnly = true)
-    public Vantagem findById(Long id) {
+    public Vantagem findById(Long id) { // Se VantagemDAO retornar Vantagem, mantenha assim
         try {
             System.out.println("DEBUG DAO: Buscando vantagem por ID: " + id);
             Vantagem vantagem = entityManager.find(Vantagem.class, id);
@@ -36,25 +36,23 @@ public class VantagemDAOImpl implements VantagemDAO {
         try {
             System.out.println("DEBUG DAO: Iniciando busca de todas as vantagens...");
             
-            // Query com JOIN FETCH para carregar a empresa junto
             String jpql = "SELECT v FROM Vantagem v LEFT JOIN FETCH v.empresa ORDER BY v.id DESC";
             TypedQuery<Vantagem> query = entityManager.createQuery(jpql, Vantagem.class);
             
             List<Vantagem> result = query.getResultList();
             
-            // getResultList() nunca retorna null, mas vamos garantir
             if (result == null) {
                 result = new ArrayList<>();
             }
             
             System.out.println("DEBUG DAO: Encontradas " + result.size() + " vantagens");
             
-            // Log detalhado de cada vantagem
             for (Vantagem v : result) {
                 System.out.println("DEBUG DAO: Vantagem - ID: " + v.getId() + 
                                  ", Nome: " + v.getNome() + 
                                  ", Descrição: " + v.getDescricao() + 
                                  ", Custo: " + v.getCustoMoedas() +
+                                 ", URL Imagem: " + v.getUrlImagem() + // Log do novo atributo
                                  ", Empresa: " + (v.getEmpresa() != null ? v.getEmpresa().getNome() : "null"));
             }
             
@@ -62,7 +60,6 @@ public class VantagemDAOImpl implements VantagemDAO {
         } catch (Exception e) {
             System.err.println("ERRO CRÍTICO DAO findAll: " + e.getMessage());
             e.printStackTrace();
-            // Sempre retornar lista vazia em caso de erro
             return new ArrayList<>();
         }
     }

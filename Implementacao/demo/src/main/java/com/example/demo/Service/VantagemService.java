@@ -35,6 +35,10 @@ public class VantagemService {
             if (vantagem.getCustoMoedas() == null || vantagem.getCustoMoedas().compareTo(BigDecimal.ZERO) <= 0) {
                 throw new RuntimeException("Custo deve ser maior que zero");
             }
+            // Nova validação para a URL (opcional, dependendo da sua regra de negócio)
+            if (vantagem.getUrlImagem() != null && !vantagem.getUrlImagem().trim().isEmpty() && !isValidUrl(vantagem.getUrlImagem())) {
+                throw new RuntimeException("URL da imagem inválida.");
+            }
             
             return vantagemDAO.save(vantagem);
         } catch (Exception e) {
@@ -62,7 +66,6 @@ public class VantagemService {
             System.out.println("DEBUG Service: Buscando todas as vantagens...");
             List<Vantagem> vantagens = vantagemDAO.findAll();
         
-            // Garantir que nunca retorne null
             if (vantagens == null) {
                 System.out.println("DEBUG Service: DAO retornou null, criando lista vazia");
                 vantagens = new ArrayList<>();
@@ -73,7 +76,6 @@ public class VantagemService {
         } catch (Exception e) {
             System.err.println("ERRO CRÍTICO Service findAll: " + e.getMessage());
             e.printStackTrace();
-            // Em caso de erro, retornar lista vazia ao invés de lançar exceção
             return new ArrayList<>();
         }
     }
@@ -91,7 +93,7 @@ public class VantagemService {
     }
 
     @Transactional
-    public Vantagem cadastrarVantagem(String nome, String descricao, BigDecimal custoMoedas, Long empresaId) {
+    public Vantagem cadastrarVantagem(String nome, String descricao, BigDecimal custoMoedas, String urlImagem, Long empresaId) {
         try {
             System.out.println("DEBUG Service: Cadastrando nova vantagem: " + nome);
             
@@ -105,6 +107,7 @@ public class VantagemService {
             vantagem.setNome(nome);
             vantagem.setDescricao(descricao);
             vantagem.setCustoMoedas(custoMoedas);
+            vantagem.setUrlImagem(urlImagem); // Definindo a URL da imagem
             vantagem.setEmpresa(empresa);
 
             return save(vantagem);
@@ -112,6 +115,16 @@ public class VantagemService {
             System.err.println("ERRO Service cadastrarVantagem: " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException("Erro ao cadastrar vantagem: " + e.getMessage(), e);
+        }
+    }
+
+    // Método auxiliar para validação de URL simples (você pode usar uma regex mais robusta)
+    private boolean isValidUrl(String url) {
+        try {
+            new java.net.URI(url);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 }
