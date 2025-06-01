@@ -1,5 +1,7 @@
 package com.example.demo.DAO;
 
+import java.util.List;
+
 import org.springframework.stereotype.Repository;
 
 import com.example.demo.Model.Professor;
@@ -32,5 +34,27 @@ public class ProfessorDAOImpl implements ProfessorDAO {
       TypedQuery<Long> query = entityManager.createQuery(
             "SELECT COUNT(p) FROM Professor p", Long.class); 
       return query.getSingleResult();
+   }
+
+   @Override
+   @Transactional(readOnly = true)
+   public List<Professor> findAll() {
+      TypedQuery<Professor> query = entityManager.createQuery(
+         "SELECT p FROM Professor p LEFT JOIN FETCH p.instituicao ORDER BY p.nome", Professor.class
+      );
+      return query.getResultList();
+   }
+
+   @Override
+   @Transactional(readOnly = true)
+   public Professor findById (Long id){
+      try {
+         Professor professor = entityManager.find(Professor.class, id);
+         System.out.println("Professor encontrado: " + (professor != null ? professor.getNome() : null));
+         return professor;
+      } catch (Exception e){
+         e.printStackTrace();
+         return null;
+      }
    }
 }

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lista de Empresas Parceiras - Sistema de Moeda Estudantil</title>
+    <title>Transferir Moedas - Sistema de Moeda Estudantil</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -60,7 +60,6 @@
     </nav>
 
     <main class="container mt-4">
-      <!-- Mensagens de feedback -->
       <div
         th:if="${sucesso}"
         class="alert alert-success alert-dismissible fade show"
@@ -89,86 +88,52 @@
       </div>
 
       <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-building"></i> Lista de Empresas Parceiras</h2>
-        <div>
-          <a href="/vantagens/cadastrar" class="btn btn-primary me-2">
-            <i class="bi bi-gift"></i> Cadastrar Vantagem
-          </a>
-          <a href="/empresas/nova" class="btn btn-success">
-            <i class="bi bi-plus"></i> Nova Empresa
-          </a>
-        </div>
+        <h2><i class="bi bi-coin"></i> Transferir Moedas</h2>
       </div>
 
       <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Transferir Moedas para Aluno</h5>
+        </div>
         <div class="card-body">
-          <div
-            th:if="${empresas == null or #lists.isEmpty(empresas)}"
-            class="text-center py-4"
-          >
-            <i class="bi bi-inbox display-1 text-muted"></i>
-            <p class="mt-3 text-muted">
-              Nenhuma empresa parceira cadastrada ainda.
-            </p>
-            <a href="/empresas/nova" class="btn btn-success">
-              <i class="bi bi-plus"></i> Cadastrar primeira empresa
-            </a>
-          </div>
+          <form th:action="@{/transacoes/salvar}" method="post">
+            <input type="hidden" id="professorId" name="professorId" th:value="${professor.Id}" />
 
-          <div
-            th:if="${empresas != null and !#lists.isEmpty(empresas)}"
-            class="table-responsive"
-          >
-            <table class="table table-striped table-hover">
-              <thead class="table-dark">
-                <tr>
-                  <th>ID</th>
-                  <th>Nome</th>
-                  <th>Email</th>
-                  <th>CNPJ</th>
-                  <th>Telefone</th>
-                  <th>Endereço</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr th:each="empresa : ${empresas}">
-                  <td th:text="${empresa.id}"></td>
-                  <td th:text="${empresa.nome}"></td>
-                  <td th:text="${empresa.email}"></td>
-                  <td th:text="${empresa.cnpj}"></td>
-                  <td th:text="${empresa.telefone}"></td>
-                  <td th:text="${empresa.endereco}"></td>
-                  <td>
-                    <div class="btn-group" role="group">
-                      <a
-                        th:href="@{/empresas/detalhes/{id}(id=${empresa.id})}"
-                        class="btn btn-sm btn-outline-info"
-                        title="Detalhes"
-                      >
-                        <i class="bi bi-eye"></i>
-                      </a>
-                      <a
-                        th:href="@{/empresas/editar/{id}(id=${empresa.id})}"
-                        class="btn btn-sm btn-outline-warning"
-                        title="Editar"
-                      >
-                        <i class="bi bi-pencil"></i>
-                      </a>
-                      <a
-                        th:href="@{/empresas/excluir/{id}(id=${empresa.id})}"
-                        class="btn btn-sm btn-outline-danger"
-                        title="Excluir"
-                        onclick="return confirm('Tem certeza que deseja excluir esta empresa?')"
-                      >
-                        <i class="bi bi-trash"></i>
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            <div class="mb-3">
+              <label for="professorNome" class="form-label">Professor:</label>
+              <input type="text" class="form-control" id="professorNome" th:value="${professor.Nome}" readonly />
+            </div>
+
+            <div class="mb-3">
+              <label for="saldoProfessor" class="form-label">Seu Saldo Atual:</label>
+              <input type="text" class="form-control" id="saldoProfessor" th:value="${professor.saldoMoedas} + ' moedas'" readonly />
+            </div>
+
+            <div class="mb-3">
+              <label for="alunoId" class="form-label">Selecionar Aluno:</label>
+              <select class="form-select" id="alunoId" name="alunoId" required>
+                <option value="">Selecione um aluno...</option>
+                <option th:each="aluno : ${alunos}" th:value="${aluno.id}" th:text="${aluno.nome}"></option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="quantidadeMoedas" class="form-label">Quantidade de Moedas:</label>
+              <input type="number" class="form-control" id="quantidadeMoedas" name="quantidadeMoedas" min="1" required />
+            </div>
+
+            <div class="mb-3">
+              <label for="motivo" class="form-label">Motivo da Transferência:</label>
+              <textarea class="form-control" id="motivo" name="motivo" rows="3" required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-send"></i> Transferir Moedas
+            </button>
+            <a th:href="@{/professores}" class="btn btn-secondary">
+              <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+          </form>
         </div>
       </div>
     </main>

@@ -20,8 +20,7 @@ public class VantagemController {
     private final VantagemService vantagemService;
     private final EmpresaParceiraService empresaParceiraService;
 
-    public VantagemController(VantagemService vantagemService,
-                              EmpresaParceiraService empresaParceiraService) {
+    public VantagemController(VantagemService vantagemService, EmpresaParceiraService empresaParceiraService) {
         this.vantagemService = vantagemService;
         this.empresaParceiraService = empresaParceiraService;
     }

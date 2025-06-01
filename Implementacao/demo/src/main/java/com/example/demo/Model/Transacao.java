@@ -27,10 +27,6 @@ public class Transacao {
     @Column(nullable = false)
     private LocalDateTime dataTransacao = LocalDateTime.now();
     
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TipoTransacao tipo;
-    
     @ManyToOne
     @JoinColumn(name = "professor_id")
     private Professor professor;
@@ -39,24 +35,14 @@ public class Transacao {
     @JoinColumn(name = "aluno_id")
     private Aluno aluno;
     
-    @ManyToOne
-    @JoinColumn(name = "vantagem_id")
-    private Vantagem vantagem;
     
-    @Column(unique = true)
-    private String codigoCupom;
-    
-    public enum TipoTransacao {
-        ENVIO_MOEDAS, TROCA_VANTAGEM
-    }
     
     // Constructors
     public Transacao() {}
     
-    public Transacao(BigDecimal valor, String motivo, TipoTransacao tipo, Professor professor, Aluno aluno) {
+    public Transacao(BigDecimal valor, String motivo, Professor professor, Aluno aluno) {
         this.valor = valor;
         this.motivo = motivo;
-        this.tipo = tipo;
         this.professor = professor;
         this.aluno = aluno;
     }
@@ -74,18 +60,10 @@ public class Transacao {
     public LocalDateTime getDataTransacao() { return dataTransacao; }
     public void setDataTransacao(LocalDateTime dataTransacao) { this.dataTransacao = dataTransacao; }
     
-    public TipoTransacao getTipo() { return tipo; }
-    public void setTipo(TipoTransacao tipo) { this.tipo = tipo; }
-    
     public Professor getProfessor() { return professor; }
     public void setProfessor(Professor professor) { this.professor = professor; }
     
     public Aluno getAluno() { return aluno; }
     public void setAluno(Aluno aluno) { this.aluno = aluno; }
     
-    public Vantagem getVantagem() { return vantagem; }
-    public void setVantagem(Vantagem vantagem) { this.vantagem = vantagem; }
-    
-    public String getCodigoCupom() { return codigoCupom; }
-    public void setCodigoCupom(String codigoCupom) { this.codigoCupom = codigoCupom; }
 }
