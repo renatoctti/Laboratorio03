@@ -122,7 +122,6 @@
               <thead class="table-dark">
                 <tr>
                   <th>ID</th>
-                  <th>Tipo</th>
                   <th>Valor</th>
                   <th>Motivo</th>
                   <th>Data</th>
@@ -131,14 +130,8 @@
                 </tr>
               </thead>
               <tbody>
-                <tr
-                  th:each="transacao : ${transacoes}"
-                  th:if="${transacao.tipo == T(com.example.demo.Model.Transacao.TipoTransacao).ENVIO_MOEDAS}"
-                >
+                <tr th:each="transacao : ${transacoes}">
                   <td th:text="${transacao.id}"></td>
-                  <td>
-                    <span class="badge bg-primary">Envio de Moedas</span>
-                  </td>
                   <td>
                     <span
                       class="badge bg-success"
