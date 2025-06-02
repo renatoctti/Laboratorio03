@@ -1,0 +1,36 @@
+@startuml TransacaoMoeda
+participant Professor
+participant "Frontend" as Front
+participant "TransacaoController" as Controller
+participant "TransacaoService" as Service
+participant "ProfessorDAO" as ProfessorDAO
+participant "AlunoDAO" as AlunoDAO
+participant "TransacaoDAO" as TransacaoDAO
+participant "EmailService" as Email
+
+Professor -> Front : Preenche formulário de envio (aluno, valor, motivo)
+Front -> Controller : POST /transacoes (dados da transação)
+Controller -> Service : realizarTransacao(transacaoDTO)
+
+Service -> ProfessorDAO : buscarPorId(professorId)
+ProfessorDAO --> Service : Professor com saldo
+
+alt saldo suficiente
+    Service -> AlunoDAO : buscarPorId(alunoId)
+    AlunoDAO --> Service : Aluno encontrado
+
+    Service -> TransacaoDAO : salvar(transacaoEntity)
+    TransacaoDAO --> Service : Transação salva
+
+    Service -> Email : enviarNotificacaoAluno(emailAluno, mensagem)
+    
+    Service --> Controller : Sucesso (transação registrada)
+    Controller --> Front : HTTP 201 Created
+    Front -> Professor : Exibe mensagem de sucesso
+else saldo insuficiente
+    Service --> Controller : Erro: saldo insuficiente
+    Controller --> Front : HTTP 400 Bad Request
+    Front -> Professor : Exibe mensagem de erro
+end
+
+@enduml

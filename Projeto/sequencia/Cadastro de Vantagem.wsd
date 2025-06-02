@@ -1,16 +1,20 @@
-@startuml
-actor EmpresaParceira
-participant "Frontend" as FE
-participant "API Backend" as BE
-participant "VantagemService" as VS
+@startuml sequencia
+actor EmpresaParceira as Empresa
+participant "Frontend" as Front
+participant "VantagemController" as Controller
+participant "VantagemService" as Service
+participant "VantagemDAO" as DAO
 participant "Banco de Dados" as DB
 
-EmpresaParceira -> FE : Preenche formulário de cadastro de vantagem
-FE -> BE : POST /vantagens
-BE -> VS : cadastrarVantagem(dadosVantagem)
-VS -> DB : INSERT INTO Vantagem
-DB --> VS : Confirma inserção
-VS --> BE : sucesso
-BE --> FE : resposta 201 Created
-FE --> EmpresaParceira : Exibe mensagem de sucesso
+Empresa -> Front : Preenche formulário de vantagem
+Front -> Controller : POST /vantagens/cadastrar (dados da vantagem)
+Controller -> Service : save(Vantagem vantagem)
+Service -> DAO : save(Vantagem vantagem)
+DAO -> DB : INSERT INTO vantagens (...)
+DB --> DAO : Confirmação (ID da vantagem)
+DAO --> Service : Vantagem salva com ID
+Service --> Controller : Vantagem criada com sucesso
+Controller --> Front : HTTP 201 Created
+Front -> Empresa : Exibe mensagem de sucesso
+
 @enduml

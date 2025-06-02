@@ -1,16 +1,20 @@
-@startuml
-actor Aluno
-participant "Frontend" as FE
-participant "API Backend" as BE
-participant "VantagemService" as VS
+@startuml listar vantagens
+participant EmpresaParceira as Empresa
+participant "Frontend" as Front
+participant "VantagemController" as Controller
+participant "VantagemService" as Service
+participant "VantagemDAO" as DAO
 participant "Banco de Dados" as DB
 
-Aluno -> FE : Solicita listagem de vantagens
-FE -> BE : GET /vantagens
-BE -> VS : listarVantagens()
-VS -> DB : SELECT * FROM Vantagem
-DB --> VS : Lista de vantagens
-VS --> BE : Lista de vantagens
-BE --> FE : resposta 200 OK + dados
-FE --> Aluno : Exibe lista de vantagens disponíveis
+Empresa -> Front : Solicita listagem de vantagens
+Front -> Controller : GET /vantagens
+Controller -> Service : List<Vantagem> findAll()
+Service -> DAO : findAll()
+DAO -> DB : SELECT * FROM vantagens
+DB --> DAO : Lista de vantagens
+DAO --> Service : Lista de vantagens
+Service --> Controller : Lista de vantagens
+Controller --> Front : HTTP 200 OK + JSON (vantagens)
+Front -> Empresa : Exibe lista de vantagens
+
 @enduml
