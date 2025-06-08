@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Página Inicial do Aluno</title>
+    <style>
+      /* Variáveis CSS para cores */
+      :root {
+        --primary-blue: #007bff; /* Azul primário */
+        --darker-blue: #0056b3; /* Azul mais escuro para hover */
+        --light-grey: #f8f9fa; /* Cinza claro para fundo */
+        --text-color: #343a40; /* Cor de texto padrão */
+        --logout-red: #dc3545; /* Vermelho para logout */
+        --logout-red-hover: #c82333; /* Vermelho mais escuro para hover */
+        --shadow-color: rgba(0, 0, 0, 0.15); /* Cor da sombra */
+        --success-green: #28a745; /* Verde para mensagens de sucesso */
+        --error-red: #dc3545; /* Vermelho para mensagens de erro */
+      }
+
+      /* Estilos Reset e Básicos */
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
+          "Segoe UI Emoji", "Segoe UI Symbol";
+        background-color: var(--light-grey);
+        color: var(--text-color);
+        margin: 0; /* Remove margens padrão do body */
+        padding-top: 60px; /* Espaço para a navbar fixa */
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        line-height: 1.5; /* Melhor legibilidade */
+      }
+
+      /* Estilos da Barra de Navegação (Navbar) */
+      .navbar {
+        background-color: var(--primary-blue); /* Azul primário */
+        color: white;
+        padding: 0.75rem 1.5rem; /* Ajuste de padding para caber melhor */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        box-shadow: 0 2px 8px var(--shadow-color); /* Sombra mais suave */
+        z-index: 1000;
+      }
+
+      .navbar-brand {
+        font-size: 1.5rem; /* Tamanho de fonte responsivo */
+        font-weight: 700; /* Bold */
+        color: white;
+        text-decoration: none;
+        white-space: nowrap; /* Evita quebra de linha em nomes longos */
+      }
+
+      .navbar-nav {
+        display: flex;
+        align-items: center;
+      }
+
+      /* Estilo para o botão de logout dentro da navbar */
+      button.logout-button {
+        margin-right: 5rem;
+        background-color: var(--logout-red); /* Vermelho */
+        color: white;
+        padding: 0.5rem 1rem; /* Padding ajustado */
+        border: none;
+        border-radius: 0.25rem; /* Bordas levemente arredondadas */
+        font-weight: 600; /* Semi-bold */
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out,
+          transform 0.1s ease-in-out; /* Transição para transform */
+        font-size: 0.9rem; /* Tamanho de fonte ajustado */
+      }
+
+      button.logout-button:hover {
+        background-color: var(--logout-red-hover);
+        transform: translateY(-1px); /* Efeito sutil ao passar o mouse */
+      }
+      button.logout-button:active {
+        transform: translateY(0); /* Efeito de clique */
+      }
+
+      /* Estilos da Área de Conteúdo Principal */
+      .main-content {
+        flex-grow: 1;
+        padding: 2rem; /* Padding em rem para consistência */
+        max-width: 900px; /* Largura máxima ligeiramente reduzida */
+        margin: 1.5rem auto; /* Margem em rem */
+        background-color: #ffffff;
+        border-radius: 0.75rem; /* Bordas mais arredondadas */
+        box-shadow: 0 4px 18px var(--shadow-color);
+        text-align: center;
+      }
+
+      h1 {
+        color: var(--primary-blue);
+        margin-bottom: 1.5rem; /* Margem em rem */
+        font-size: 2.2rem; /* Tamanho de fonte ajustado */
+        font-weight: 700;
+      }
+      p {
+        font-size: 1rem; /* Tamanho de fonte base */
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        max-width: 700px; /* Limita largura do parágrafo */
+        margin-left: auto; /* Centraliza parágrafo dentro do container */
+        margin-right: auto;
+      }
+      span.highlight {
+        color: var(--primary-blue); /* Destaque com o azul primário */
+        font-weight: 700;
+      }
+
+      /* Novo estilo para o saldo do aluno */
+      .student-balance {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--text-color);
+        margin-bottom: 2rem;
+      }
+      .student-balance span {
+        color: var(--success-green); /* Cor verde para o valor das moedas */
+        font-size: 1.4rem; /* Aumenta o tamanho do número de moedas */
+      }
+
+      /* Estilos para a Listagem de Vantagens (reaproveitados de home_empresa) */
+      .advantages-section {
+        margin-top: 3rem;
+        text-align: left; /* Alinha o texto das vantagens à esquerda */
+      }
+
+      .advantages-section h2 {
+        text-align: center;
+        color: var(--primary-blue);
+        margin-bottom: 2rem;
+        font-size: 1.8rem;
+      }
+
+      .advantage-list {
+        display: grid;
+        grid-template-columns: repeat(
+          auto-fill,
+          minmax(280px, 1fr)
+        ); /* 280px cards */
+        gap: 25px; /* Espaçamento entre os cards */
+        justify-content: center; /* Centraliza cards na grid */
+        margin-top: 20px;
+      }
+
+      /* Estilo para o link do card */
+      .advantage-link {
+        text-decoration: none; /* Remove sublinhado padrão */
+        color: inherit; /* Herda a cor do texto do pai */
+        display: block; /* Faz o link ocupar todo o card */
+      }
+
+      .advantage-card {
+        background-color: #fefefe;
+        border: 1px solid #e0e0e0;
+        border-radius: 0.75rem;
+        padding: 20px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+      }
+
+      .advantage-card:hover {
+        transform: translateY(-5px); /* Efeito "levitar" */
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+      }
+
+      .advantage-image {
+        /* Novo estilo para a imagem */
+        width: 100%;
+        height: 160px;
+        object-fit: cover; /* Garante que a imagem preencha o espaço sem distorção */
+        border-radius: 0.5rem;
+        margin-bottom: 15px;
+        background-color: #e9ecef; /* Cor de fundo caso a imagem não carregue */
+      }
+
+      .advantage-image-placeholder {
+        /* Manter para fallback do onerror */
+        width: 100%;
+        height: 160px; /* Mantém a altura fixa */
+        background-color: #e9ecef; /* Cor de fundo para o placeholder */
+        color: #6c757d; /* Cor do texto */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 0.9rem;
+        border-radius: 0.5rem;
+        margin-bottom: 15px;
+        border: 1px dashed #ced4da; /* Borda tracejada para indicar placeholder */
+        text-align: center;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+
+      .advantage-card h3 {
+        font-size: 1.3rem;
+        color: var(--darker-blue);
+        margin-top: 0;
+        margin-bottom: 10px;
+      }
+
+      .advantage-card p {
+        font-size: 0.95rem;
+        color: #555;
+        flex-grow: 1; /* Permite que a descrição ocupe o espaço disponível */
+        margin-bottom: 15px;
+      }
+
+      .advantage-card .cost {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: var(--success-green);
+        margin-top: 10px;
+        margin-bottom: 15px;
+      }
+
+      .no-advantages {
+        text-align: center;
+        color: #777;
+        margin-top: 40px;
+        font-size: 1.1em;
+        padding: 20px;
+        background-color: #e9ecef;
+        border-radius: 0.5rem;
+      }
+
+      /* Estilos para o botão de Extrato */
+      .action-buttons {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+      }
+
+      .action-button {
+        background-color: var(--primary-blue);
+        color: white;
+        padding: 0.8rem 1.8rem;
+        border: none;
+        border-radius: 0.3rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out,
+          transform 0.1s ease-in-out;
+        text-decoration: none;
+        display: inline-block;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .action-button:hover {
+        background-color: var(--darker-blue);
+        transform: translateY(-2px);
+      }
+      .action-button:active {
+        transform: translateY(0);
+      }
+
+      /* Adicionado para mensagens gerais de erro/sucesso na home */
+      .message {
+        padding: 10px 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        text-align: center;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+
+      .message.success {
+        background-color: #d4edda;
+        color: var(--success-green);
+        border: 1px solid #c3e6cb;
+      }
+
+      .message.error {
+        background-color: #f8d7da;
+        color: var(--error-red);
+        border: 1px solid #f5c6cb;
+      }
+
+      /* Estilo para mensagens de indisponibilidade no card */
+      .advantage-unavailable {
+        color: var(--error-red);
+        font-weight: bold;
+        margin-top: 15px;
+        margin-bottom: 0;
+      }
+
+      /* Responsividade para telas menores */
+      @media (max-width: 768px) {
+        body {
+          padding-top: 0;
+        }
+        .navbar {
+          flex-direction: column;
+          align-items: flex-start;
+          position: static;
+          box-shadow: none;
+          padding: 1rem;
+        }
+        .navbar-brand {
+          margin-bottom: 0.75rem;
+          font-size: 1.3rem;
+        }
+        .navbar-nav {
+          width: 100%;
+          justify-content: flex-end;
+        }
+        button.logout-button {
+          margin-right: 0;
+          width: auto;
+          align-self: flex-end;
+        }
+
+        .main-content {
+          padding: 1rem;
+          margin: 1rem auto;
+          border-radius: 0.5rem;
+        }
+        h1 {
+          font-size: 1.8rem;
+          margin-bottom: 1rem;
+        }
+        p {
+          font-size: 0.95rem;
+          margin-bottom: 0.8rem;
+        }
+        .advantages-section h2 {
+          font-size: 1.5rem;
+        }
+        .advantage-list {
+          grid-template-columns: 1fr;
+        }
+        .action-buttons {
+          flex-direction: column;
+          gap: 1rem;
+        }
+        .action-button {
+          width: 100%;
+          padding: 0.7rem 1.2rem;
+          font-size: 1rem;
+        }
+      }
+
+      /* Pequenos ajustes para telas muito pequenas */
+      @media (max-width: 480px) {
+        .navbar {
+          padding: 0.75rem;
+        }
+        .navbar-brand {
+          font-size: 1.2rem;
+        }
+        button.logout-button {
+          padding: 0.4rem 0.8rem;
+          font-size: 0.8rem;
+        }
+        .main-content {
+          padding: 0.8rem;
+          margin: 0.8rem auto;
+        }
+        h1 {
+          font-size: 1.5rem;
+        }
+        p {
+          font-size: 0.9rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="navbar-brand">Minha Plataforma Educacional</div>
+      <nav class="navbar-nav">
+        <form th:action="@{/logout}" method="get">
+          <button type="submit" class="logout-button">Sair</button>
+        </form>
+      </nav>
+    </header>
+
+    <main class="main-content">
+      <h1>
+        Bem-vindo, Aluno
+        <span class="highlight" th:text="${aluno.nome}"></span>!
+      </h1>
+      <!-- Exibição do saldo de moedas do aluno -->
+      <p class="student-balance">
+        Seu Saldo Atual:
+        <span class="highlight" th:text="${aluno.moedas}">0</span> Moedas
+      </p>
+
+      <p>
+        Esta é a sua página inicial. Aqui você pode encontrar informações
+        importantes e ferramentas para o seu curso. Utilize o menu superior para
+        navegar e gerenciar suas atividades.
+      </p>
+
+      <!-- Botões de Ação para o Aluno -->
+      <div class="action-buttons">
+        <a th:href="@{/home/aluno/extrato}" class="action-button">
+          Ver Extrato
+        </a>
+        <a th:href="@{/home/aluno/minhas-vantagens}" class="action-button">
+          Minhas Vantagens
+        </a>
+      </div>
+
+      <!-- Mensagens de Sucesso/Erro (gerais) -->
+      <div th:if="${success}" class="message success">
+        <p th:text="${success}"></p>
+      </div>
+      <div th:if="${error}" class="message error">
+        <p th:text="${error}"></p>
+      </div>
+
+      <!-- Seção para exibir todas as vantagens -->
+      <section class="advantages-section">
+        <h2>Vantagens Disponíveis</h2>
+        <div th:if="${todasVantagens.isEmpty()}" class="no-advantages">
+          <p>Não há vantagens cadastradas no sistema ainda.</p>
+        </div>
+        <div th:unless="${todasVantagens.isEmpty()}" class="advantage-list">
+          <div th:each="vantagem : ${todasVantagens}">
+            <!-- Torna o card clicável se não estiver vendida e tiver moedas suficientes -->
+            <a
+              th:if="${!vantagem.vendida and aluno.moedas >= vantagem.custoEmMoedas}"
+              th:href="@{/home/aluno/confirmar-compra/{id}(id=${vantagem.id})}"
+              class="advantage-link"
+            >
+              <div class="advantage-card">
+                <!-- Exibe a imagem da vantagem ou um placeholder se não houver URL -->
+                <img
+                  th:src="${vantagem.imageUrl}"
+                  alt="Imagem da Vantagem"
+                  class="advantage-image"
+                  onerror="this.onerror=null; this.src='https://placehold.co/160x160/e9ecef/6c757d?text=Sem%20Imagem';"
+                />
+
+                <h3>
+                  <span th:text="${vantagem.nome}">Nome da Vantagem</span>
+                </h3>
+                <p>
+                  <span th:text="${vantagem.descricao}"
+                    >Descrição detalhada da vantagem.</span
+                  >
+                </p>
+                <p class="empresa">
+                  Oferecido por:
+                  <span th:text="${vantagem.empresaParceira.nomeFantasia}"
+                    >Nome da Empresa</span
+                  >
+                </p>
+                <div class="cost">
+                  <span th:text="${vantagem.custoEmMoedas}">50</span> Moedas
+                </div>
+              </div>
+            </a>
+            <!-- Exibe o card sem ser clicável se estiver indisponível (vendida ou saldo insuficiente) -->
+            <div
+              th:if="${vantagem.vendida or aluno.moedas < vantagem.custoEmMoedas}"
+              class="advantage-card"
+            >
+              <!-- Exibe a imagem da vantagem ou um placeholder se não houver URL -->
+              <img
+                th:src="${vantagem.imageUrl}"
+                alt="Imagem da Vantagem"
+                class="advantage-image"
+                onerror="this.onerror=null; this.src='https://placehold.co/160x160/e9ecef/6c757d?text=Sem%20Imagem';"
+              />
+
+              <h3>
+                <span th:text="${vantagem.nome}">Nome da Vantagem</span>
+              </h3>
+              <p>
+                <span th:text="${vantagem.descricao}"
+                  >Descrição detalhada da vantagem.</span
+                >
+              </p>
+              <p class="empresa">
+                Oferecido por:
+                <span th:text="${vantagem.empresaParceira.nomeFantasia}"
+                  >Nome da Empresa</span
+                >
+              </p>
+              <div class="cost">
+                <span th:text="${vantagem.custoEmMoedas}">50</span> Moedas
+              </div>
+              <p th:if="${vantagem.vendida}" class="advantage-unavailable">
+                Indisponível
+              </p>
+              <p
+                th:if="${aluno.moedas < vantagem.custoEmMoedas and !vantagem.vendida}"
+                class="advantage-unavailable"
+              >
+                Moedas insuficientes
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

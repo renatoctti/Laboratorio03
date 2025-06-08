@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Página Inicial da Empresa</title>
+    <style>
+      /* Variáveis CSS para cores */
+      :root {
+        --primary-blue: #007bff; /* Azul primário */
+        --darker-blue: #0056b3; /* Azul mais escuro para hover */
+        --light-grey: #f8f9fa; /* Cinza claro para fundo */
+        --text-color: #343a40; /* Cor de texto padrão */
+        --logout-red: #dc3545; /* Vermelho para logout */
+        --logout-red-hover: #c82333; /* Vermelho mais escuro para hover */
+        --shadow-color: rgba(0, 0, 0, 0.15); /* Cor da sombra */
+        --success-green: #28a745; /* Verde para mensagens de sucesso */
+        --error-red: #dc3545; /* Vermelho para mensagens de erro */
+      }
+
+      /* Estilos Reset e Básicos */
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
+          "Segoe UI Emoji", "Segoe UI Symbol";
+        background-color: var(--light-grey);
+        color: var(--text-color);
+        margin: 0; /* Remove margens padrão do body */
+        padding-top: 60px; /* Espaço para a navbar fixa */
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        line-height: 1.5; /* Melhor legibilidade */
+      }
+
+      /* Estilos da Barra de Navegação (Navbar) */
+      .navbar {
+        background-color: var(--primary-blue); /* Azul primário */
+        color: white;
+        padding: 0.75rem 1.5rem; /* Ajuste de padding para caber melhor */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: fixed; /* Fixa a navbar no topo */
+        top: 0;
+        left: 0;
+        width: 100%;
+        box-shadow: 0 2px 8px var(--shadow-color); /* Sombra mais suave */
+        z-index: 1000; /* Garante que a navbar fique acima de outros elementos */
+      }
+
+      .navbar-brand {
+        font-size: 1.5rem; /* Tamanho de fonte responsivo */
+        font-weight: 700; /* Bold */
+        color: white;
+        text-decoration: none;
+        white-space: nowrap; /* Evita quebra de linha em nomes longos */
+      }
+
+      .navbar-nav {
+        display: flex;
+        align-items: center;
+      }
+
+      /* Estilo para o botão de logout dentro da navbar */
+      button.logout-button {
+        margin-right: 5rem; /* Ajuste para não colar no canto */
+        background-color: var(--logout-red); /* Vermelho */
+        color: white;
+        padding: 0.5rem 1rem; /* Padding ajustado */
+        border: none;
+        border-radius: 0.25rem; /* Bordas levemente arredondadas */
+        font-weight: 600; /* Semi-bold */
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out,
+          transform 0.1s ease-in-out; /* Transição para transform */
+        font-size: 0.9rem; /* Tamanho de fonte ajustado */
+      }
+
+      button.logout-button:hover {
+        background-color: var(--logout-red-hover);
+        transform: translateY(-1px); /* Efeito sutil ao passar o mouse */
+      }
+      button.logout-button:active {
+        transform: translateY(0); /* Efeito de clique */
+      }
+
+      /* Estilos da Área de Conteúdo Principal */
+      .main-content {
+        flex-grow: 1;
+        padding: 2rem; /* Padding em rem para consistência */
+        max-width: 900px; /* Largura máxima ligeiramente reduzida */
+        margin: 1.5rem auto; /* Margem em rem */
+        background-color: #ffffff;
+        border-radius: 0.75rem; /* Bordas mais arredondadas */
+        box-shadow: 0 4px 18px var(--shadow-color);
+        text-align: center; /* Centraliza o texto */
+      }
+
+      h1 {
+        color: var(--primary-blue);
+        margin-bottom: 1.5rem; /* Margem em rem */
+        font-size: 2.2rem; /* Tamanho de fonte ajustado */
+        font-weight: 700;
+      }
+      p {
+        font-size: 1rem; /* Tamanho de fonte base */
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        max-width: 700px; /* Limita largura do parágrafo */
+        margin-left: auto; /* Centraliza parágrafo dentro do container */
+        margin-right: auto;
+      }
+      span.highlight {
+        color: var(--primary-blue); /* Destaque com o azul primário */
+        font-weight: 700;
+      }
+
+      /* Estilos para Mensagens (Sucesso/Erro) */
+      .message {
+        padding: 10px 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        text-align: center;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .message.success {
+        background-color: #d4edda;
+        color: var(--success-green);
+        border: 1px solid #c3e6cb;
+      }
+
+      .message.error {
+        background-color: #f8d7da;
+        color: var(--error-red);
+        border: 1px solid #f5c6cb;
+      }
+
+      /* Estilos para Ações da Empresa (Botões) */
+      .company-actions {
+        margin-top: 2rem;
+        display: flex;
+        flex-direction: column; /* Para empilhar botões em mobile */
+        gap: 15px; /* Espaçamento entre os botões */
+        align-items: center; /* Centraliza os botões */
+      }
+
+      .action-button {
+        background-color: var(--primary-blue);
+        color: white;
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 0.3rem;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out,
+          transform 0.1s ease-in-out;
+        display: inline-block; /* Para o link parecer um botão */
+        width: auto; /* Ajusta largura ao conteúdo */
+        max-width: 280px; /* Limite de largura para botões */
+      }
+
+      .action-button:hover {
+        background-color: var(--darker-blue);
+        transform: translateY(-2px);
+      }
+      .action-button:active {
+        transform: translateY(0);
+      }
+
+      /* Estilos para a Listagem de Vantagens */
+      .advantages-section {
+        margin-top: 3rem;
+        text-align: left; /* Alinha o texto das vantagens à esquerda */
+      }
+
+      .advantages-section h2 {
+        text-align: center;
+        color: var(--primary-blue);
+        margin-bottom: 2rem;
+        font-size: 1.8rem;
+      }
+
+      .advantage-list {
+        display: grid;
+        grid-template-columns: repeat(
+          auto-fill,
+          minmax(280px, 1fr)
+        ); /* 280px cards */
+        gap: 25px; /* Espaçamento entre os cards */
+        justify-content: center; /* Centraliza cards na grid */
+        margin-top: 20px;
+      }
+
+      .advantage-card {
+        background-color: #fefefe;
+        border: 1px solid #e0e0e0;
+        border-radius: 0.75rem;
+        padding: 20px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+      }
+
+      .advantage-card:hover {
+        transform: translateY(-5px); /* Efeito "levitar" */
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+      }
+
+      /* Novo estilo para o placeholder da imagem */
+      .advantage-image {
+        width: 100%;
+        height: 160px;
+        object-fit: cover; /* Garante que a imagem preencha o espaço sem distorção */
+        border-radius: 0.5rem;
+        margin-bottom: 15px;
+        background-color: #e9ecef; /* Cor de fundo caso a imagem não carregue */
+      }
+
+      .advantage-image-placeholder {
+        width: 100%;
+        height: 160px; /* Mantém a altura fixa */
+        background-color: #e9ecef; /* Cor de fundo para o placeholder */
+        color: #6c757d; /* Cor do texto */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 0.9rem;
+        border-radius: 0.5rem;
+        margin-bottom: 15px;
+        border: 1px dashed #ced4da; /* Borda tracejada para indicar placeholder */
+        text-align: center;
+        padding: 10px;
+        box-sizing: border-box; /* Garante que padding não aumente o tamanho */
+      }
+
+      .advantage-card h3 {
+        font-size: 1.3rem;
+        color: var(--darker-blue);
+        margin-top: 0;
+        margin-bottom: 10px;
+      }
+
+      .advantage-card p {
+        font-size: 0.95rem;
+        color: #555;
+        flex-grow: 1; /* Permite que a descrição ocupe o espaço disponível */
+        margin-bottom: 15px;
+      }
+
+      .advantage-card .cost {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: var(--success-green);
+        margin-top: 10px;
+      }
+
+      .no-advantages {
+        text-align: center;
+        color: #777;
+        margin-top: 40px;
+        font-size: 1.1em;
+        padding: 20px;
+        background-color: #e9ecef;
+        border-radius: 0.5rem;
+      }
+
+      /* Responsividade para telas menores */
+      @media (max-width: 768px) {
+        body {
+          padding-top: 0;
+        }
+        .navbar {
+          flex-direction: column;
+          align-items: flex-start;
+          position: static;
+          box-shadow: none;
+          padding: 1rem;
+        }
+        .navbar-brand {
+          margin-bottom: 0.75rem;
+          font-size: 1.3rem;
+        }
+        .navbar-nav {
+          width: 100%;
+          justify-content: flex-end;
+        }
+        button.logout-button {
+          margin-right: 0;
+          width: auto;
+          align-self: flex-end;
+        }
+
+        .main-content {
+          padding: 1rem;
+          margin: 1rem auto;
+          border-radius: 0.5rem;
+        }
+        h1 {
+          font-size: 1.8rem;
+          margin-bottom: 1rem;
+        }
+        p {
+          font-size: 0.95rem;
+          margin-bottom: 0.8rem;
+        }
+        .company-actions {
+          gap: 10px;
+        }
+        .action-button {
+          padding: 0.7rem 1rem;
+          font-size: 0.9rem;
+        }
+        .advantages-section h2 {
+          font-size: 1.5rem;
+        }
+        .advantage-list {
+          grid-template-columns: 1fr; /* Uma coluna em telas menores */
+        }
+      }
+
+      /* Pequenos ajustes para telas muito pequenas */
+      @media (max-width: 480px) {
+        .navbar {
+          padding: 0.75rem;
+        }
+        .navbar-brand {
+          font-size: 1.2rem;
+        }
+        button.logout-button {
+          padding: 0.4rem 0.8rem;
+          font-size: 0.8rem;
+        }
+        .main-content {
+          padding: 0.8rem;
+          margin: 0.8rem auto;
+        }
+        h1 {
+          font-size: 1.5rem;
+        }
+        p {
+          font-size: 0.9rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="navbar-brand">Plataforma da Empresa</div>
+      <nav class="navbar-nav">
+        <form th:action="@{/logout}" method="get">
+          <button type="submit" class="logout-button">Sair</button>
+        </form>
+      </nav>
+    </header>
+
+    <main class="main-content">
+      <h1>
+        Bem-vindo(a), Empresa
+        <span class="highlight" th:text="${usuario.nomeFantasia}"></span>!
+      </h1>
+      <p>
+        Esta é a sua página inicial. Gerencie suas vantagens, acompanhe resgates
+        e encontre alunos engajados.
+      </p>
+
+      <div th:if="${success}" class="message success">
+        <p th:text="${success}"></p>
+      </div>
+      <div th:if="${error}" class="message error">
+        <p th:text="${error}"></p>
+      </div>
+
+      <div class="company-actions">
+        <a th:href="@{/home/empresa/cadastro-vantagem}" class="action-button"
+          >Cadastrar Nova Vantagem</a
+        >
+        <!-- NOVIDADE AQUI: Botão para Vantagens Vendidas -->
+        <a th:href="@{/home/empresa/vantagens-vendidas}" class="action-button"
+          >Ver Vantagens Vendidas</a
+        >
+      </div>
+
+      <section class="advantages-section">
+        <h2>Minhas Vantagens Cadastradas</h2>
+        <div th:if="${minhasVantagens.isEmpty()}" class="no-advantages">
+          <p>
+            Você ainda não cadastrou nenhuma vantagem. Clique no botão
+            "Cadastrar Nova Vantagem" para começar!
+          </p>
+        </div>
+        <div th:unless="${minhasVantagens.isEmpty()}" class="advantage-list">
+          <div class="advantage-card" th:each="vantagem : ${minhasVantagens}">
+            <!-- Exibe a imagem da vantagem ou um placeholder se não houver URL -->
+            <img
+              th:src="${vantagem.imageUrl}"
+              alt="Imagem da Vantagem"
+              class="advantage-image"
+              onerror="this.onerror=null; this.src='https://placehold.co/160x160/e9ecef/6c757d?text=Sem%20Imagem';"
+            />
+
+            <h3><span th:text="${vantagem.nome}">Nome da Vantagem</span></h3>
+            <p>
+              <span th:text="${vantagem.descricao}"
+                >Descrição detalhada da vantagem.</span
+              >
+            </p>
+            <div class="cost">
+              <span th:text="${vantagem.custoEmMoedas}">50</span> Moedas
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

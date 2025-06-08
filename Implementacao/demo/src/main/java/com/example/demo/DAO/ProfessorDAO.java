@@ -1,14 +1,15 @@
-package com.example.demo.DAO;
+package com.example.demo.dao;
 
-import java.util.List;
+import com.example.demo.model.Professor;
 
-import com.example.demo.Model.Professor;
+import java.util.*;
 
 public interface ProfessorDAO {
 
-   List<Professor> findAll();
    Professor save(Professor professor);
-   long count();
-   Professor findById(Long id);
+   Optional<Professor> findById(Long id);
+   Optional<Professor> findByCpf(String cpf);
+   List<Professor> findAll();
+   void delete(Professor professor); 
 
 } 

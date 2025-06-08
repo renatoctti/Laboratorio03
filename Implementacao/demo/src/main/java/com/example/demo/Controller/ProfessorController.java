@@ -1,82 +1,171 @@
-package com.example.demo.Controller;
+// src/main/java/com/example/demo/controller/ProfessorController.java
+package com.example.demo.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.example.demo.Model.Aluno;
-import com.example.demo.Model.Professor;
-import com.example.demo.Model.Transacao;
-import com.example.demo.Service.AlunoService;
-import com.example.demo.Service.ProfessorService;
-import com.example.demo.Service.TransacaoService;
+import com.example.demo.dto.TransferenciaMoedasDTO;
+import com.example.demo.model.Aluno;
+import com.example.demo.model.Professor;
+import com.example.demo.model.Transacao; // Importar a classe Transacao
+import com.example.demo.model.Usuario;
+import com.example.demo.service.UsuarioService;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 
 @Controller
-@RequestMapping("/professores")
+@RequestMapping("/home/professor")
 public class ProfessorController {
 
-   @Autowired
-   private ProfessorService professorService;
+  @Autowired
+  private UsuarioService usuarioService;
 
-   @Autowired
-   private AlunoService alunoService;
+  @GetMapping
+  public String homeProfessor(HttpSession session, Model model) {
+    Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
 
-   @Autowired
-   private TransacaoService transacaoService;
+    if (usuarioLogado == null || !usuarioLogado.getRole().equals("PROFESSOR")) {
+      return "redirect:/login";
+    }
 
-   @GetMapping
-   public String listar(Model model) {
-      try {
-         model.addAttribute("professores", professorService.findAll());
-         return "professores/lista";
-      } catch (Exception e) {
-         e.printStackTrace();
-         model.addAttribute("erro", "Erro ao carregar professores");
-         return "professores/lista";
-      }
-   }
+    Optional<Professor> professorOpt = usuarioService.findProfessorById(usuarioLogado.getId());
+    if (!professorOpt.isPresent()) {
+      session.invalidate();
+      return "redirect:/login?error=Professor+nao+encontrado";
+    }
+    Professor professor = professorOpt.get();
+    session.setAttribute("usuarioLogado", professor);
 
-   @GetMapping("/transacao/{id}")
-   public String showTransacaoForm(@PathVariable Long id, Model model) {
-      try {
-         Professor professor = professorService.findById(id);
-         List<Aluno> alunos = alunoService.findAll();
-         model.addAttribute("alunos", alunos);
-         model.addAttribute("professor", professor);
-         return "professores/transacao";
-      } catch (Exception e) {
-         e.printStackTrace();
-         return "professores/transacao";
-      }
-   }
+    model.addAttribute("professor", professor);
 
-   @GetMapping("/historico/{id}") // Use um endpoint claro, ex: /professores/historico/1
-   public String showHistoricoCompletoTransacoes(@PathVariable Long id, Model model,
-         RedirectAttributes redirectAttributes) {
-      try {
-         Professor professor = professorService.findById(id);
-         if (professor == null) {
-            redirectAttributes.addFlashAttribute("erro", "Professor não encontrado.");
-            return "redirect:/professores";
-         }
+    return "home_professor";
+  }
 
-         List<Transacao> todasTransacoes = transacaoService.getTodasTransacoesDoProfessor(id);
+  @GetMapping("/transferir-moedas")
+  public String mostrarFormTransferenciaMoedas(HttpSession session, Model model) {
+    Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
 
-         model.addAttribute("professor", professor);
-         model.addAttribute("transacoes", todasTransacoes); 
+    if (usuarioLogado == null || !usuarioLogado.getRole().equals("PROFESSOR")) {
+      return "redirect:/login";
+    }
 
-         return "professores/historico";
-      } catch (Exception e) {
-         e.printStackTrace();
-         redirectAttributes.addFlashAttribute("erro", "Erro ao carregar histórico de transações.");
-         return "redirect:/professores"; 
-      }
-   }
+    Optional<Professor> professorOpt = usuarioService.findProfessorById(usuarioLogado.getId());
+    if (!professorOpt.isPresent()) {
+      session.invalidate();
+      return "redirect:/login?error=Usuario+nao+encontrado";
+    }
+    Professor professor = professorOpt.get();
+    session.setAttribute("usuarioLogado", professor);
+
+    model.addAttribute("professor", professor);
+
+    List<Aluno> alunos = usuarioService.findAllAlunos();
+    model.addAttribute("alunos", alunos);
+
+    model.addAttribute("transferenciaMoedasDTO", new TransferenciaMoedasDTO());
+
+    return "professor/transferir_moedas";
+  }
+
+  @PostMapping("/transferir-moedas")
+  public String transferirMoedas(
+      @Valid TransferenciaMoedasDTO transferenciaMoedasDTO,
+      BindingResult result,
+      HttpSession session,
+      RedirectAttributes redirectAttributes,
+      Model model) {
+    Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
+    if (usuarioLogado == null || !usuarioLogado.getRole().equals("PROFESSOR")) {
+      redirectAttributes.addFlashAttribute("error", "Acesso negado.");
+      return "redirect:/login";
+    }
+
+    Optional<Professor> professorOpt = usuarioService.findProfessorById(usuarioLogado.getId());
+    if (!professorOpt.isPresent()) {
+      redirectAttributes.addFlashAttribute("error", "Professor não encontrado.");
+      session.invalidate();
+      return "redirect:/login";
+    }
+    Professor professor = professorOpt.get();
+
+    if (result.hasErrors()) {
+      model.addAttribute("professor", professor);
+      model.addAttribute("alunos", usuarioService.findAllAlunos());
+      model.addAttribute("error", result.getFieldError() != null ? result.getFieldError().getDefaultMessage()
+          : "Erro de validação nos campos.");
+      // Mantém o DTO no modelo para que os valores preenchidos sejam mantidos no
+      // formulário
+      model.addAttribute("transferenciaMoedasDTO", transferenciaMoedasDTO);
+      return "professor/transferir_moedas";
+    }
+
+    int quantidade = transferenciaMoedasDTO.getQuantidade();
+    Long alunoId = transferenciaMoedasDTO.getAlunoId();
+    String motivo = transferenciaMoedasDTO.getMotivo(); // NOVIDADE AQUI: Obtém o motivo
+
+    if (professor.getMoedas() < quantidade) {
+      redirectAttributes.addFlashAttribute("error", "Saldo insuficiente de moedas.");
+      return "redirect:/home/professor/transferir-moedas";
+    }
+    if (quantidade <= 0) {
+      redirectAttributes.addFlashAttribute("error", "A quantidade de moedas deve ser positiva.");
+      return "redirect:/home/professor/transferir-moedas";
+    }
+
+    Optional<Aluno> alunoOpt = usuarioService.findAlunoById(alunoId);
+    if (!alunoOpt.isPresent()) {
+      redirectAttributes.addFlashAttribute("error", "Aluno não encontrado.");
+      return "redirect:/home/professor/transferir-moedas";
+    }
+    Aluno aluno = alunoOpt.get();
+
+    try {
+      usuarioService.transferirMoedas(professor, aluno, quantidade, motivo); // Passa o motivo
+      redirectAttributes.addFlashAttribute("success",
+          quantidade + " moedas transferidas com sucesso para " + aluno.getNome() + "!");
+
+      session.setAttribute("usuarioLogado", usuarioService.findProfessorById(professor.getId()).get());
+
+    } catch (RuntimeException e) {
+      redirectAttributes.addFlashAttribute("error", "Erro ao transferir moedas: " + e.getMessage());
+    }
+
+    return "redirect:/home/professor/transferir-moedas";
+  }
+
+  // NOVO MÉTODO: Exibir o extrato de transações do professor
+  @GetMapping("/extrato")
+  public String exibirExtratoProfessor(HttpSession session, Model model) {
+    Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
+
+    if (usuarioLogado == null || !usuarioLogado.getRole().equals("PROFESSOR")) {
+      return "redirect:/login";
+    }
+
+    Optional<Professor> professorOpt = usuarioService.findProfessorById(usuarioLogado.getId());
+    if (!professorOpt.isPresent()) {
+      session.invalidate();
+      return "redirect:/login?error=Professor+nao+encontrado";
+    }
+    Professor professor = professorOpt.get();
+    session.setAttribute("usuarioLogado", professor); // Atualiza o objeto na sessão
+
+    model.addAttribute("professor", professor); // Professor completo com saldo
+
+    // Obtém o histórico de transações deste professor
+    List<Transacao> extrato = usuarioService.getExtratoProfessor(professor);
+    model.addAttribute("extrato", extrato); // Adiciona o extrato ao modelo
+
+    return "professor/extrato"; // Nome do novo arquivo HTML para o extrato
+  }
 }

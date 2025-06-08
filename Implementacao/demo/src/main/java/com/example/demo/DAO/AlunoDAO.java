@@ -1,19 +1,15 @@
-package com.example.demo.DAO;
+package com.example.demo.dao;
 
 import java.util.List;
 import java.util.Optional;
-
-import com.example.demo.Model.Aluno;
-
+import com.example.demo.model.Aluno;
 
 public interface AlunoDAO {
-    List<Aluno> findAll();
-    Optional<Aluno> findById(Long id);
-    Optional<Aluno> findByEmail(String email);
-    Optional<Aluno> findByCpf(String cpf);
-    Aluno save(Aluno aluno);
-    void deleteById(Long id);
-    boolean existsByEmail(String email);
-    boolean existsByCpf(String cpf);
-    long count();
+
+   Aluno save(Aluno aluno);
+   Optional<Aluno> findById(Long id);
+   Optional<Aluno> findByCpf(String cpf);
+   List<Aluno> findAll();
+   void delete (Aluno aluno);
+   
 }

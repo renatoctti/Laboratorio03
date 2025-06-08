@@ -1,7 +1,13 @@
-package com.example.demo.Model;
+package com.example.demo.model;
 
-import jakarta.persistence.*;
-import java.math.BigDecimal;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "vantagem")
@@ -11,33 +17,44 @@ public class Vantagem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false)
     private String nome;
 
     @Column(nullable = false, length = 500)
     private String descricao;
 
-    @Column(name = "custo_moedas", nullable = false, precision = 10, scale = 2)
-    private BigDecimal custoMoedas;
+    @Column(nullable = false)
+    private int custoEmMoedas;
 
-    // Novo atributo para a URL da imagem
-    @Column(name = "url_imagem", length = 1024) // Defina um tamanho adequado para URLs
-    private String urlImagem;
+    @ManyToOne
+    @JoinColumn(name = "empresa_id", nullable = false)
+    private Empresa empresaParceira;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "empresa_id")
-    private EmpresaParceira empresa;
+    @Column(nullable = false)
+    private boolean vendida;
 
-    // Construtores
+    @Column(nullable = true, length = 1024)
+    private String imageUrl;
+
+    // NOVIDADE AQUI: Campo para armazenar o Aluno que comprou a vantagem
+    @ManyToOne // Uma vantagem pode ser comprada por um Aluno (ou nenhum)
+    @JoinColumn(name = "aluno_comprador_id", nullable = true) // Pode ser nulo se não vendida
+    private Aluno alunoComprador;
+
+    // Construtor padrão
     public Vantagem() {
+        this.vendida = false;
     }
 
-    public Vantagem(String nome, String descricao, BigDecimal custoMoedas, String urlImagem, EmpresaParceira empresa) {
+    // Construtor com todos os campos (atualizado para incluir imageUrl e alunoComprador)
+    public Vantagem(String nome, String descricao, int custoEmMoedas, Empresa empresaParceira, String imageUrl, Aluno alunoComprador) {
         this.nome = nome;
         this.descricao = descricao;
-        this.custoMoedas = custoMoedas;
-        this.urlImagem = urlImagem; // Adicione ao construtor
-        this.empresa = empresa;
+        this.custoEmMoedas = custoEmMoedas;
+        this.empresaParceira = empresaParceira;
+        this.vendida = false; // Inicializa como não vendida
+        this.imageUrl = imageUrl;
+        this.alunoComprador = alunoComprador; // Pode ser nulo no construtor
     }
 
     // Getters e Setters
@@ -65,40 +82,43 @@ public class Vantagem {
         this.descricao = descricao;
     }
 
-    public BigDecimal getCustoMoedas() {
-        return custoMoedas;
+    public int getCustoEmMoedas() {
+        return custoEmMoedas;
     }
 
-    public void setCustoMoedas(BigDecimal custoMoedas) {
-        this.custoMoedas = custoMoedas;
+    public void setCustoEmMoedas(int custoEmMoedas) {
+        this.custoEmMoedas = custoEmMoedas;
     }
 
-    // Novo getter e setter para urlImagem
-    public String getUrlImagem() {
-        return urlImagem;
+    public Empresa getEmpresaParceira() {
+        return empresaParceira;
     }
 
-    public void setUrlImagem(String urlImagem) {
-        this.urlImagem = urlImagem;
+    public void setEmpresaParceira(Empresa empresaParceira) {
+        this.empresaParceira = empresaParceira;
     }
 
-    public EmpresaParceira getEmpresa() {
-        return empresa;
+    public boolean isVendida() {
+        return vendida;
     }
 
-    public void setEmpresa(EmpresaParceira empresa) {
-        this.empresa = empresa;
+    public void setVendida(boolean vendida) {
+        this.vendida = vendida;
     }
 
-    @Override
-    public String toString() {
-        return "Vantagem{" +
-                "id=" + id +
-                ", nome='" + nome + '\'' +
-                ", descricao='" + descricao + '\'' +
-                ", custoMoedas=" + custoMoedas +
-                ", urlImagem='" + urlImagem + '\'' + // Adicione ao toString
-                ", empresa=" + (empresa != null ? empresa.getNome() : "null") +
-                '}';
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public Aluno getAlunoComprador() {
+        return alunoComprador;
+    }
+
+    public void setAlunoComprador(Aluno alunoComprador) {
+        this.alunoComprador = alunoComprador;
     }
 }

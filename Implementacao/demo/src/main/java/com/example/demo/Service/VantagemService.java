@@ -1,15 +1,16 @@
-package com.example.demo.Service;
+package com.example.demo.service;
 
-import com.example.demo.DAO.EmpresaParceiraDAO;
-import com.example.demo.DAO.VantagemDAO;
-import com.example.demo.Model.EmpresaParceira;
-import com.example.demo.Model.Vantagem;
+import com.example.demo.dao.VantagemDAO;
+import com.example.demo.dao.AlunoDAO;
+import com.example.demo.model.Empresa;
+import com.example.demo.model.Vantagem;
+import com.example.demo.model.Aluno;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.math.BigDecimal;
+
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Optional;
 
 @Service
 public class VantagemService {
@@ -18,113 +19,66 @@ public class VantagemService {
     private VantagemDAO vantagemDAO;
 
     @Autowired
-    private EmpresaParceiraDAO empresaDAO;
+    private AlunoDAO alunoDAO;
 
     @Transactional
-    public Vantagem save(Vantagem vantagem) {
-        try {
-            System.out.println("DEBUG Service: Salvando vantagem: " + vantagem.getNome());
-            
-            // Validações básicas
-            if (vantagem.getNome() == null || vantagem.getNome().trim().isEmpty()) {
-                throw new RuntimeException("Nome da vantagem é obrigatório");
-            }
-            if (vantagem.getDescricao() == null || vantagem.getDescricao().trim().isEmpty()) {
-                throw new RuntimeException("Descrição da vantagem é obrigatória");
-            }
-            if (vantagem.getCustoMoedas() == null || vantagem.getCustoMoedas().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new RuntimeException("Custo deve ser maior que zero");
-            }
-            // Nova validação para a URL (opcional, dependendo da sua regra de negócio)
-            if (vantagem.getUrlImagem() != null && !vantagem.getUrlImagem().trim().isEmpty() && !isValidUrl(vantagem.getUrlImagem())) {
-                throw new RuntimeException("URL da imagem inválida.");
-            }
-            
-            return vantagemDAO.save(vantagem);
-        } catch (Exception e) {
-            System.err.println("ERRO Service save: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Erro ao salvar vantagem: " + e.getMessage(), e);
+    public Vantagem cadastrarVantagem(Vantagem vantagem) {
+        if (vantagem.getCustoEmMoedas() <= 0) {
+            throw new IllegalArgumentException("O custo da vantagem deve ser positivo.");
         }
+        if (vantagem.getEmpresaParceira() == null || vantagem.getEmpresaParceira().getId() == null) {
+            throw new IllegalArgumentException("Vantagem deve estar vinculada a uma empresa parceira.");
+        }
+        vantagem.setVendida(false); // Garante que novas vantagens sejam criadas como não vendidas
+        // imageUrl já será populado pelo formulário
+        return vantagemDAO.save(vantagem);
     }
 
-    @Transactional(readOnly = true)
-    public Vantagem findById(Long id) {
-        try {
-            System.out.println("DEBUG Service: Buscando vantagem por ID: " + id);
-            return vantagemDAO.findById(id);
-        } catch (Exception e) {
-            System.err.println("ERRO Service findById: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
+    public List<Vantagem> listarTodasVantagens() {
+        // Agora filtra por vantagens não vendidas E sem comprador (garantindo que só
+        // mostre as disponíveis)
+        return vantagemDAO.findByVendidaFalseAndAlunoCompradorIsNull(); // Novo método no DAO
     }
 
-    @Transactional(readOnly = true)
-    public List<Vantagem> findAll() {
-        try {
-            System.out.println("DEBUG Service: Buscando todas as vantagens...");
-            List<Vantagem> vantagens = vantagemDAO.findAll();
-        
-            if (vantagens == null) {
-                System.out.println("DEBUG Service: DAO retornou null, criando lista vazia");
-                vantagens = new ArrayList<>();
-            }
-        
-            System.out.println("DEBUG Service: Retornando " + vantagens.size() + " vantagens");
-            return vantagens;
-        } catch (Exception e) {
-            System.err.println("ERRO CRÍTICO Service findAll: " + e.getMessage());
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
+    public Optional<Vantagem> buscarVantagemPorId(Long id) {
+        return vantagemDAO.findById(id);
+    }
+
+    public List<Vantagem> listarVantagensPorEmpresa(Empresa empresa) {
+        return vantagemDAO.findByEmpresaParceira(empresa);
     }
 
     @Transactional
-    public void deleteById(Long id) {
-        try {
-            System.out.println("DEBUG Service: Deletando vantagem ID: " + id);
-            vantagemDAO.deleteById(id);
-        } catch (Exception e) {
-            System.err.println("ERRO Service deleteById: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Erro ao deletar vantagem: " + e.getMessage(), e);
-        }
+    public void deletarVantagem(Long id) {
+        vantagemDAO.findById(id).ifPresent(vantagemDAO::delete);
     }
 
     @Transactional
-    public Vantagem cadastrarVantagem(String nome, String descricao, BigDecimal custoMoedas, String urlImagem, Long empresaId) {
-        try {
-            System.out.println("DEBUG Service: Cadastrando nova vantagem: " + nome);
-            
-            EmpresaParceira empresa = null;
-            if (empresaId != null) {
-                empresa = empresaDAO.findById(empresaId)
-                    .orElseThrow(() -> new RuntimeException("Empresa não encontrada com ID: " + empresaId));
-            }
-
-            Vantagem vantagem = new Vantagem();
-            vantagem.setNome(nome);
-            vantagem.setDescricao(descricao);
-            vantagem.setCustoMoedas(custoMoedas);
-            vantagem.setUrlImagem(urlImagem); // Definindo a URL da imagem
-            vantagem.setEmpresa(empresa);
-
-            return save(vantagem);
-        } catch (Exception e) {
-            System.err.println("ERRO Service cadastrarVantagem: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Erro ao cadastrar vantagem: " + e.getMessage(), e);
+    public void comprarVantagem(Aluno aluno, Vantagem vantagem) {
+        if (aluno.getMoedas() < vantagem.getCustoEmMoedas()) {
+            throw new RuntimeException("Saldo insuficiente de moedas para comprar esta vantagem.");
         }
+        if (vantagem.isVendida()) {
+            throw new RuntimeException("Esta vantagem já foi comprada e não está mais disponível.");
+        }
+
+        aluno.setMoedas(aluno.getMoedas() - vantagem.getCustoEmMoedas());
+        alunoDAO.save(aluno);
+
+        vantagem.setVendida(true);
+        vantagem.setAlunoComprador(aluno);
+        vantagemDAO.save(vantagem);
     }
 
-    // Método auxiliar para validação de URL simples (você pode usar uma regex mais robusta)
-    private boolean isValidUrl(String url) {
-        try {
-            new java.net.URI(url);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    public List<Vantagem> listarVantagensCompradasPorAluno(Aluno aluno) {
+        return vantagemDAO.findByVendidaTrueAndAlunoCompradorOrderByNomeAsc(aluno);
+    }
+
+    public List<Vantagem> listarVantagensVendidasPorEmpresa(Empresa empresa) {
+        return vantagemDAO.findByEmpresaParceiraAndVendidaTrue(empresa);
+    }
+
+    public List<Vantagem> listarVantagensDisponiveisPorEmpresa(Empresa empresa) {
+        return vantagemDAO.findByEmpresaParceiraAndVendidaFalse(empresa);
     }
 }

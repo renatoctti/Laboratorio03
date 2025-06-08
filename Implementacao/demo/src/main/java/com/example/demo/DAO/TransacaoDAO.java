@@ -1,12 +1,23 @@
-package com.example.demo.DAO;
+package com.example.demo.dao;
 
+import com.example.demo.model.Aluno;
+import com.example.demo.model.Professor;
+import com.example.demo.model.Transacao;
 
 import java.util.List;
-
-import com.example.demo.Model.Professor;
-import com.example.demo.Model.Transacao;
+import java.util.Optional;
 
 public interface TransacaoDAO {
+
    Transacao save(Transacao transacao);
-   List<Transacao> getTransacoesByProfessor(Professor professor);
+
+   Optional<Transacao> findById(Long id);
+
+   List<Transacao> findAll();
+
+   List<Transacao> findByProfessorOrigemOrderByDataTransacaoDesc(Professor professorOrigem);
+
+   List<Transacao> findByAlunoDestinoOrderByDataTransacaoDesc(Aluno alunoDestino);
+
+   void delete(Transacao transacao);
 }

@@ -1,24 +1,24 @@
-package com.example.demo.DAO;
+package com.example.demo.dao;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
-import com.example.demo.Model.Professor;
+import com.example.demo.model.Professor;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.transaction.Transactional;
 
 @Repository
-@Transactional
 public class ProfessorDAOImpl implements ProfessorDAO {
-
    @PersistenceContext
    private EntityManager entityManager;
 
    @Override
+   @Transactional
    public Professor save(Professor professor) {
       if (professor.getId() == null) {
          entityManager.persist(professor);
@@ -29,32 +29,34 @@ public class ProfessorDAOImpl implements ProfessorDAO {
    }
 
    @Override
-   @Transactional(readOnly = true)
-   public long count() {
-      TypedQuery<Long> query = entityManager.createQuery(
-            "SELECT COUNT(p) FROM Professor p", Long.class); 
-      return query.getSingleResult();
+   public Optional<Professor> findById(Long id) {
+      return Optional.ofNullable(entityManager.find(Professor.class, id));
    }
 
    @Override
-   @Transactional(readOnly = true)
-   public List<Professor> findAll() {
-      TypedQuery<Professor> query = entityManager.createQuery(
-         "SELECT p FROM Professor p LEFT JOIN FETCH p.instituicao ORDER BY p.nome", Professor.class
-      );
-      return query.getResultList();
-   }
-
-   @Override
-   @Transactional(readOnly = true)
-   public Professor findById (Long id){
+   public Optional<Professor> findByCpf(String cpf) {
       try {
-         Professor professor = entityManager.find(Professor.class, id);
-         System.out.println("Professor encontrado: " + (professor != null ? professor.getNome() : null));
-         return professor;
-      } catch (Exception e){
-         e.printStackTrace();
-         return null;
+         return Optional
+               .ofNullable(entityManager.createQuery("SELECT p FROM Professor p WHERE p.cpf = :cpf", Professor.class)
+                     .setParameter("cpf", cpf)
+                     .getSingleResult());
+      } catch (NoResultException e) {
+         return Optional.empty();
+      }
+   }
+
+   @Override
+   public List<Professor> findAll() {
+      return entityManager.createQuery("SELECT p FROM Professor p", Professor.class).getResultList();
+   }
+
+   @Override
+   @Transactional
+   public void delete(Professor professor) {
+      if (entityManager.contains(professor)) {
+         entityManager.remove(professor);
+      } else {
+         entityManager.remove(entityManager.merge(professor));
       }
    }
 }
