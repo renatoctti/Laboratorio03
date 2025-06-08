@@ -1,0 +1,99 @@
+@startuml Envio de Moedas (Professor)
+skinparam handwritten true
+skinparam style strictuml
+
+title Diagrama de Sequência - Envio de Moedas (Professor)
+
+actor Professor as P
+participant ProfessorController as PC
+participant UsuarioService as US
+participant AlunoService as AS
+participant TransacaoService as TS
+participant AlunoDAO as ADAOS
+participant TransacaoDAO as TDAO
+database "Banco de Dados" as DB
+
+P -> PC : 1: GET /home/professor/enviar-moedas (exibir formulário)
+activate PC
+PC -> PC : 2: Valida sessão do Professor
+alt Se usuário não for Professor ou sessão inválida
+    PC --> P : Redireciona para /login
+    deactivate PC
+else Sessão válida
+    PC -> US : 3: findProfessorById(idUsuarioLogado)
+    activate US
+    US -> DB : 3.1: Consulta Professor
+    activate DB
+    DB --> US : 3.2: ProfessorLogado
+    deactivate DB
+    US --> PC : 3.3: ProfessorLogado
+    deactivate US
+
+    PC -> AS : 4: listarTodosAlunos() (para preencher combo/lista)
+    activate AS
+    AS -> ADAOS : 4.1: findAll()
+    activate ADAOS
+    ADAOS -> DB : 4.1.1: SELECT Alunos
+    activate DB
+    DB --> ADAOS : 4.1.2: Lista de Alunos
+    deactivate DB
+    ADAOS --> AS : 4.1.3: Lista de Alunos
+    deactivate ADAOS
+    AS --> PC : 4.2: Lista de Alunos
+    deactivate AS
+
+    PC -> PC : 5: Adiciona Professor e Lista de Alunos ao Model
+    PC --> P : 6: exibe formularioEnviarMoedas.html
+    deactivate PC
+
+    P -> PC : 7: POST /home/professor/enviar-moedas (idAluno, quantidadeMoedas)
+    activate PC
+    PC -> PC : 8: Valida dados do formulário (idAluno, quantidadeMoedas)
+
+    alt Se houver erros de validação
+        PC --> P : 9: Retorna para formulário com erros
+        deactivate PC
+    else Dados válidos
+        PC -> US : 10: findProfessorById(idUsuarioLogado) (re-busca professor)
+        activate US
+        US -> DB : 10.1: Consulta Professor
+        deactivate DB
+        US --> PC : 10.2: ProfessorLogado
+        deactivate US
+
+        PC -> AS : 11: buscarAlunoPorId(idAluno)
+        activate AS
+        AS -> ADAOS : 11.1: findById(idAluno)
+        activate ADAOS
+        ADAOS -> DB : 11.1.1: SELECT Aluno
+        deactivate DB
+        ADAOS --> AS : 11.1.2: AlunoAlvo
+        deactivate ADAOS
+        AS --> PC : 11.2: AlunoAlvo
+        deactivate AS
+
+        PC -> TS : 12: enviarMoedas(professorLogado, alunoAlvo, quantidadeMoedas)
+        activate TS
+        TS -> TS : 13: Valida se quantidade > 0 e se Professor tem permissão
+        TS -> Aluno : 14: alteraSaldo(quantidadeMoedas)
+        TS -> ADAOS : 15: save(alunoAlvo)
+        activate ADAOS
+        ADAOS -> DB : 15.1: UPDATE Aluno (saldo)
+        deactivate ADAOS
+        deactivate ADAOS
+
+        TS -> Transacao : 16: cria nova Transacao(professor, aluno, quantidade, tipo="CREDITO")
+        TS -> TDAO : 17: save(transacao)
+        activate TDAO
+        TDAO -> DB : 17.1: INSERT Transacao
+        deactivate DB
+        deactivate TDAO
+        TS --> PC : 18: Sucesso/Erro
+        deactivate TS
+
+        PC -> PC : 19: Adiciona mensagem de sucesso/erro (RedirectAttributes)
+        PC --> P : 20: Redireciona para /home/professor
+        deactivate PC
+    end
+end
+@enduml

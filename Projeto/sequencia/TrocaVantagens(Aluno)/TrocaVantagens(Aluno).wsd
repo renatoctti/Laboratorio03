@@ -1,0 +1,128 @@
+@startuml Compra de Vantagens (Aluno)
+
+skinparam handwritten true
+skinparam style strictuml
+
+title Diagrama de Sequência - Compra de Vantagens (Aluno)
+
+actor Aluno as A
+participant AlunoController as AC
+participant VantagemService as VS
+participant UsuarioService as US
+participant AlunoDAO as ADAOS
+participant VantagemDAO as VDAO
+participant TransacaoDAO as TDAO
+database "Banco de Dados" as DB
+
+' Fluxo para Exibir Confirmação de Compra
+group Exibir Confirmação de Compra
+    A -> AC : 1: GET /home/aluno/confirmar-compra/{idVantagem} (clique no card)
+    activate AC
+    AC -> AC : 2: Valida sessão do Aluno
+    alt Se usuário não for Aluno ou sessão inválida
+        AC --> A : Redireciona para /login
+        deactivate AC
+    else Sessão válida
+        AC -> US : 3: findAlunoById(idUsuarioLogado)
+        activate US
+        US -> ADAOS : 3.1: findById(idUsuarioLogado)
+        activate ADAOS
+        ADAOS -> DB : 3.1.1: SELECT Aluno
+        activate DB
+        DB --> ADAOS : 3.1.2: AlunoLogado
+        deactivate DB
+        ADAOS --> US : 3.1.3: AlunoLogado
+        deactivate US
+
+        AC -> VS : 4: buscarVantagemPorId(idVantagem)
+        activate VS
+        VS -> VDAO : 4.1: findById(idVantagem)
+        activate VDAO
+        VDAO -> DB : 4.1.1: SELECT Vantagem
+        activate DB
+        DB --> VDAO : 4.1.2: VantagemDetalhes
+        deactivate DB
+        VDAO --> VS : 4.1.3: VantagemDetalhes
+        deactivate VDAO
+        VS --> AC : 4.2: VantagemDetalhes
+        deactivate VS
+
+        AC -> AC : 5: Valida se Vantagem existe, não vendida e saldo suficiente
+        alt Se validação falhar
+            AC --> A : 6: Redireciona para home com erro
+            deactivate AC
+        else Validação OK
+            AC -> AC : 7: Adiciona Aluno e Vantagem ao Model
+            AC --> A : 8: Exibe aluno/confirmar_compra.html
+            deactivate AC
+        end
+    end
+end
+
+' Fluxo para Efetivar Compra
+group Efetivar Compra
+    A -> AC : 9: POST /home/aluno/comprar-vantagem (idVantagem)
+    activate AC
+    AC -> AC : 10: Valida sessão do Aluno
+    alt Se usuário não for Aluno ou sessão inválida
+        AC --> A : Redireciona para /login
+        deactivate AC
+    else Sessão válida
+        AC -> US : 11: findAlunoById(idUsuarioLogado)
+        activate US
+        US -> ADAOS : 11.1: findById(idUsuarioLogado)
+        activate ADAOS
+        ADAOS -> DB : 11.1.1: SELECT Aluno
+        deactivate DB
+        ADAOS --> US : 11.1.2: AlunoAtualizado
+        deactivate ADAOS
+        US --> AC : 11.3: AlunoAtualizado
+        deactivate US
+
+        AC -> VS : 12: buscarVantagemPorId(idVantagem)
+        activate VS
+        VS -> VDAO : 12.1: findById(idVantagem)
+        activate VDAO
+        VDAO -> DB : 12.1.1: SELECT Vantagem
+        deactivate DB
+        VDAO --> VS : 12.1.2: VantagemComprar
+        deactivate VDAO
+        VS --> AC : 12.2: VantagemComprar
+        deactivate VS
+
+        AC -> VS : 13: comprarVantagem(alunoAtualizado, vantagemComprar)
+        activate VS
+        VS -> VS : 13.1: Valida se saldo suficiente e não vendida
+        alt Se validação falhar
+            VS --> AC : 13.2: Retorna RuntimeException
+        else Validação OK
+            VS -> Aluno : 13.3: debitaMoedas()
+            VS -> ADAOS : 13.4: save(alunoAtualizado)
+            activate ADAOS
+            ADAOS -> DB : 13.4.1: UPDATE Aluno (saldo)
+            deactivate DB
+            deactivate ADAOS
+
+            VS -> Vantagem : 13.5: setVendida(true), setAlunoComprador(alunoAtualizado)
+            VS -> VDAO : 13.6: save(vantagemComprar)
+            activate VDAO
+            VDAO -> DB : 13.6.1: UPDATE Vantagem (vendida, alunoComprador)
+            deactivate DB
+            deactivate VDAO
+
+            VS -> Transacao : 13.7: cria nova Transacao (aluno, vantagem, tipo="COMPRA_VANTAGEM")
+            VS -> TDAO : 13.8: save(novaTransacao)
+            activate TDAO
+            TDAO -> DB : 13.8.1: INSERT Transacao
+            deactivate DB
+            deactivate TDAO
+            VS --> AC : 13.9: Sucesso
+        end
+        deactivate VS
+
+        AC -> AC : 14: Adiciona mensagem de sucesso/erro (RedirectAttributes)
+        AC --> A : 15: Redireciona para /home/aluno
+        deactivate AC
+    end
+end
+@enduml

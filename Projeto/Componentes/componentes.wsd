@@ -1,21 +1,48 @@
 @startuml Diagrama de Componentes
-package "Frontend" {
-  [App Web] --> [API Backend]
+skinparam handwritten false
+skinparam style strictuml
+
+title Diagrama de Componentes do Sistema
+
+' Componentes de interface do usuário
+component "Web Browser" as UI
+
+' Componentes da camada de Apresentação (Controladores)
+component "Controladores Web\n(Spring MVC)" as Controllers {
+    [AlunoController]
+    [ProfessorController]
+    [EmpresaController]
 }
 
-package "Backend" {
-  [API Backend] --> [AuthService]
-  [API Backend] --> [EmailService]
-  [API Backend] --> [TransacaoService]
-  [API Backend] --> [VantagemService]
-  [API Backend] --> [CupomService]
+' Componentes da camada de Lógica de Negócios (Serviços)
+component "Camada de Serviço\n(Lógica de Negócios)" as Services {
+    [UsuarioService]
+    [AlunoService]
+    [VantagemService]
+    [TransacaoService]
 }
 
-package "Database" {
-  [Banco de Dados]
+' Componentes da camada de Acesso a Dados (DAOs/Repositórios)
+component "Camada de Acesso a Dados\n(DAOs/JPA)" as DAOs {
+    [UsuarioDAO]
+    [AlunoDAO]
+    [ProfessorDAO]
+    [EmpresaDAO]
+    [VantagemDAO]
+    [TransacaoDAO]
 }
 
-[TransacaoService] --> [Banco de Dados]
-[VantagemService] --> [Banco de Dados]
-[CupomService] --> [Banco de Dados]
+' Componente de Banco de Dados
+database "Banco de Dados\n(JPA/Hibernate)" as Database
+
+' Relacionamentos entre os componentes
+
+UI .right.> Controllers : Faz requisições HTTP\n(GET, POST)
+
+Controllers .down.> Services : Chama métodos de negócio
+
+Services .down.> DAOs : Invoca operações de persistência
+
+DAOs .down.> Database : Acessa e manipula dados
+
 @enduml

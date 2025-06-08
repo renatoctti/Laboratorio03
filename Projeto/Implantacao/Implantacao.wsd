@@ -1,33 +1,35 @@
+@startuml Diagrama De Implantacao
+skinparam handwritten false
+skinparam style strictuml
 
-@startuml Diagrma de Implantação
+title Diagrama de Implantação do Sistema
 
-
-node "Professor" {
-  [Navegador Web]
+node "Máquina do Cliente" as Client {
+  component "Web Browser" as WebBrowser
 }
 
-node "EmpresaParceira" {
-  [Navegador Web]
+node "Servidor de Aplicação" as AppServer {
+  component "Aplicação Spring Boot" as SpringApp {
+    folder "Controladores" as ControllersFolder
+    folder "Camada de Serviço" as ServicesFolder
+    folder "Camada de Acesso a Dados" as DAOsFolder
+    folder "Modelos" as ModelsFolder
+  }
 }
 
-node "Servidor Web" {
-  [Frontend]
+node "Servidor de Banco de Dados" as DBServer {
+  database "Sistema de Gerenciamento\nde Banco de Dados (SGBD)" as DBMS
+  artifact "Base de Dados\n(Schemas/Tabelas)" as DatabaseSchema
 }
 
-node "Servidor de Aplicação" {
-  [Backend API]
-}
+' Relacionamentos de deployment e comunicação
+WebBrowser -- (ControllersFolder) : "Acessa via HTTP/HTTPS"
+SpringApp .down.> DBMS : "Conecta via JDBC"
+DBMS .down.> DatabaseSchema : "Gerencia"
 
-node "Banco de Dados" {
-  [MySQL]
-}
+' Relações de contenção interna no SpringApp
+ControllersFolder ..> ServicesFolder : "Chama lógica de negócio"
+ServicesFolder ..> DAOsFolder : "Invoca persistência"
+DAOsFolder ..> ModelsFolder : "Manipula entidades"
 
-node "Servidor SMTP" {
-  [Serviço de Email]
-}
-
-[Frontend] --> [Backend API] : REST API
-
-[Backend API] --> [Banco de Dados] : JDBC/ORM
-[Backend API] --> [Serviço de Email] : SMTP
 @enduml

@@ -1,0 +1,67 @@
+@startuml Casos De Uso
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Aluno" as aluno
+actor "Professor" as professor
+actor "Empresa Parceira" as empresa
+actor "Administrador" as admin
+
+rectangle "Sistema de Gestão de Moedas Educacionais" {
+  usecase "Realizar Login" as UC_Login
+  usecase "Realizar Logout" as UC_Logout
+
+  usecase "Visualizar Home do Aluno" as UC_HomeAluno
+  usecase "Visualizar Vantagens Disponíveis" as UC_ListVantagensDisponiveis
+  usecase "Confirmar Compra de Vantagem" as UC_ConfirmCompra
+  usecase "Comprar Vantagem" as UC_ComprarVantagem
+  usecase "Visualizar Minhas Vantagens" as UC_MinhasVantagensAluno
+  usecase "Visualizar Extrato (Aluno)" as UC_ExtratoAluno
+
+  usecase "Visualizar Home do Professor" as UC_HomeProfessor
+  usecase "Enviar Moedas para Aluno" as UC_EnviarMoedas
+  usecase "Visualizar Extrato (Professor)" as UC_ExtratoProfessor
+
+  usecase "Visualizar Home da Empresa" as UC_HomeEmpresa
+  usecase "Cadastrar Vantagem" as UC_CadastrarVantagem
+  usecase "Visualizar Vantagens Cadastradas" as UC_ListVantagensCadastradas
+  usecase "Visualizar Vantagens Vendidas" as UC_ListVantagensVendidas
+}
+
+aluno -- UC_Login
+aluno -- UC_Logout
+aluno -- UC_HomeAluno
+aluno -- UC_ListVantagensDisponiveis
+aluno -- UC_ConfirmCompra
+aluno -- UC_ComprarVantagem
+aluno -- UC_MinhasVantagensAluno
+aluno -- UC_ExtratoAluno
+
+professor -- UC_Login
+professor -- UC_Logout
+professor -- UC_HomeProfessor
+professor -- UC_EnviarMoedas
+professor -- UC_ExtratoProfessor
+
+empresa -- UC_Login
+empresa -- UC_Logout
+empresa -- UC_HomeEmpresa
+empresa -- UC_CadastrarVantagem
+empresa -- UC_ListVantagensCadastradas
+empresa -- UC_ListVantagensVendidas
+
+' Relações de Inclusão/Extensão (se aplicável, mas para Casos de Uso de alto nível, nem sempre são estritamente necessárias)
+UC_HomeAluno <.. UC_ListVantagensDisponiveis : include
+UC_HomeAluno <.. UC_MinhasVantagensAluno : include
+UC_HomeAluno <.. UC_ExtratoAluno : include
+
+UC_HomeProfessor <.. UC_EnviarMoedas : include
+UC_HomeProfessor <.. UC_ExtratoProfessor : include
+
+UC_HomeEmpresa <.. UC_CadastrarVantagem : include
+UC_HomeEmpresa <.. UC_ListVantagensCadastradas : include
+UC_HomeEmpresa <.. UC_ListVantagensVendidas : include
+
+UC_ComprarVantagem <.. UC_ConfirmCompra : extends
+
+@enduml

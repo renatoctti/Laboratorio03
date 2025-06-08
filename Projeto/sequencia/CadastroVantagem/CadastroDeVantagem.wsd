@@ -1,0 +1,68 @@
+@startuml Cadastro de Vantagens
+skinparam handwritten true
+skinparam style strictuml
+
+title Diagrama de Sequência - Cadastro de Vantagens
+
+actor Empresa as A
+participant EmpresaController as EC
+participant VantagemService as VS
+participant UsuarioService as US
+participant VantagemDAO as VDAO
+participant EmpresaDAO as EDAO
+database "Banco de Dados" as DB
+
+A -> EC : 1: GET /home/empresa/cadastro-vantagem
+activate EC
+EC -> EC : 2: Valida sessão da Empresa
+alt Se usuário não for Empresa ou sessão inválida
+    EC --> A : Redireciona para /login
+    deactivate EC
+else Sessão válida
+    EC -> US : 3: findEmpresaByEmail(emailUsuarioLogado)
+    activate US
+    US -> EDAO : 3.1: findByEmail(email)
+    activate EDAO
+    EDAO -> DB : 3.1.1: SELECT Empresa
+    activate DB
+    DB --> EDAO : 3.1.2: Empresa
+    deactivate DB
+    EDAO --> US : 3.1.3: EmpresaLogada
+    deactivate EDAO
+    US --> EC : 3.2: EmpresaLogada
+    deactivate US
+
+    EC -> Vantagem : 4: cria nova Vantagem()
+    EC -> EC : 5: adiciona Vantagem ao Model
+    EC --> A : 6: exibeFormularioCadastroVantagem.html
+    deactivate EC
+
+    A -> EC : 7: POST /home/empresa/cadastro-vantagem (dadosVantagem)
+    activate EC
+    EC -> EC : 8: Valida dados (BindingResult)
+    EC -> EC : 9: Associa EmpresaLogada à Vantagem (vantagem.setEmpresaParceira(empresaLogada))
+
+    alt Se houver erros de validação
+        EC --> A : 10: Retorna para formulario com erros
+        deactivate EC
+    else Dados válidos
+        EC -> VS : 11: cadastrarVantagem(vantagem)
+        activate VS
+        VS -> VS : 12: Valida lógica de negócio (ex: custo > 0)
+        VS -> VDAO : 13: save(vantagem)
+        activate VDAO
+        VDAO -> DB : 13.1: INSERT/UPDATE Vantagem
+        activate DB
+        DB --> VDAO : 13.2: Vantagem Salva
+        deactivate DB
+        VDAO --> VS : 13.3: Vantagem Salva
+        deactivate VDAO
+        VS --> EC : 14: Vantagem Salva
+        deactivate VS
+
+        EC -> EC : 15: Adiciona mensagem de sucesso (RedirectAttributes)
+        EC --> A : 16: Redireciona para /home/empresa
+        deactivate EC
+    end
+end
+@enduml

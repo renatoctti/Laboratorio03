@@ -1,79 +1,76 @@
-@startuml ER
-entity "Usuario" as Usuario {
-  + id_usuario : int <<PK>>
+@startuml Diagrama Entidade Relacionamento
+skinparam linetype ortho
+skinparam handwritten false
+hide circle
+hide empty members
+
+title Diagrama de Entidade-Relacionamento
+
+entity Usuario {
+  * id : Long
+  --
   email : String
   senha : String
-  tipo_usuario : String
+  role : String
 }
 
-entity "Aluno" as Aluno {
-  + id_aluno : int <<PK, FK>>
+entity Aluno {
+  * id : Long
+  --
+  ra : String
   nome : String
-  cpf : String
-  rg : String
-  endereco : String
-  curso : String
-  saldo : int
-  id_instituicao : int <<FK>>
+  moedas : int
 }
 
-entity "Professor" as Professor {
-  + id_professor : int <<PK, FK>>
+entity Professor {
+  * id : Long
+  --
   nome : String
-  cpf : String
-  departamento : String
-  saldo : int
-  id_instituicao : int <<FK>>
+  disciplina : String
 }
 
-entity "EmpresaParceira" as EmpresaParceira {
-  + id_empresa : int <<PK, FK>>
+entity Empresa {
+  * id : Long
+  --
+  cnpj : String
+  razaoSocial : String
+  nomeFantasia : String
+}
+
+entity Vantagem {
+  * id : Long
+  --
   nome : String
+  descricao : String
+  custoEmMoedas : int
+  vendida : boolean
+  imageUrl : String
+  --
+  empresa_id : Long <<FK>>
+  aluno_comprador_id : Long <<FK>>
 }
 
-entity "Instituicao" as Instituicao {
-  + id_instituicao : int <<PK>>
-  nome : String
-}
-
-entity "Transacao" as Transacao {
-  + id_transacao : int <<PK>>
-  data : Date
+entity Transacao {
+  * id : Long
+  --
   valor : int
-  descricao : String
-  origem_id : int <<FK>>
-  destino_id : int <<FK>>
+  data : LocalDate
+  tipo : String
+  --
+  aluno_id : Long <<FK>>
+  professor_id : Long <<FK>>
 }
 
-entity "Vantagem" as Vantagem {
-  + id_vantagem : int <<PK>>
-  descricao : String
-  foto : String
-  custo : int
-  id_empresa : int <<FK>>
-}
+' Relacionamentos de Herança/Especialização (representado como 1-1 se houver uma tabela para cada subtipo)
+Usuario ||--o{ Aluno : "1" "1" é Aluno
+Usuario ||--o{ Professor : "1" "1" é Professor
+Usuario ||--o{ Empresa : "1" "1" é Empresa
 
-entity "Cupom" as Cupom {
-  + id_cupom : int <<PK>>
-  codigo : String
-  data_geracao : Date
-  validade : Date
-  id_vantagem : int <<FK>>
-  id_aluno : int <<FK>>
-}
+' Relacionamentos de Associação
+Empresa ||--o{ Vantagem : "1" "N" possui >
+Vantagem }o--|| Aluno : "N" "0..1" comprada por
 
-Usuario ||--o{ Aluno
-Usuario ||--o{ Professor
-Usuario ||--o{ EmpresaParceira
+Aluno ||--o{ Transacao : "1" "N" gera/recebe >
+Professor ||--o{ Transacao : "1" "N" envia >
 
-Aluno }o--|| Instituicao
-Professor }o--|| Instituicao
-
-Transacao }o--|| Usuario : origem_id
-Transacao }o--|| Usuario : destino_id
-
-EmpresaParceira ||--o{ Vantagem
-
-Aluno ||--o{ Cupom
-Vantagem ||--o{ Cupom
 @enduml

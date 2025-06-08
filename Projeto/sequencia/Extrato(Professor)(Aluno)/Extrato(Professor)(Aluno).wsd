@@ -1,0 +1,97 @@
+@startuml Consultas de Extrato (Professor e Aluno)
+skinparam handwritten true
+skinparam style strictuml
+
+title Diagrama de Sequência - Consultas de Extrato (Professor e Aluno)
+
+actor Professor as P
+actor Aluno as A
+participant ProfessorController as PC
+participant AlunoController as AC
+participant UsuarioService as US
+participant UsuarioDAO as UDAO
+participant TransacaoDAO as TDAO
+database "Banco de Dados" as DB
+
+' Fluxo para Consulta de Extrato (Professor)
+group Consulta de Extrato - Professor
+    P -> PC : 1: GET /home/professor/extrato
+    activate PC
+    PC -> PC : 2: Valida sessão do Professor
+    alt Se usuário não for Professor ou sessão inválida
+        PC --> P : Redireciona para /login
+        deactivate PC
+    else Sessão válida
+        PC -> US : 3: findProfessorById(idUsuarioLogado)
+        activate US
+        US -> UDAO : 3.1: findById(idUsuarioLogado)
+        activate UDAO
+        UDAO -> DB : 3.1.1: SELECT Professor
+        activate DB
+        DB --> UDAO : 3.1.2: ProfessorLogado
+        deactivate DB
+        UDAO --> US : 3.1.3: ProfessorLogado
+        deactivate UDAO
+        US --> PC : 3.2: ProfessorLogado
+        deactivate US
+
+        PC -> US : 4: getExtratoProfessor(professorLogado)
+        activate US
+        US -> TDAO : 4.1: findByProfessor(professorLogado)
+        activate TDAO
+        TDAO -> DB : 4.1.1: SELECT Transacao WHERE professor = professorLogado
+        activate DB
+        DB --> TDAO : 4.1.2: Lista de Transações
+        deactivate DB
+        TDAO --> US : 4.1.3: Lista de Transações
+        deactivate TDAO
+        US --> PC : 4.2: Lista de Transações
+        deactivate US
+
+        PC -> PC : 5: Adiciona Professor e Lista de Transações ao Model
+        PC --> P : 6: Exibe professor/extrato.html
+        deactivate PC
+    end
+end
+
+' Fluxo para Consulta de Extrato (Aluno)
+group Consulta de Extrato - Aluno
+    A -> AC : 1: GET /home/aluno/extrato
+    activate AC
+    AC -> AC : 2: Valida sessão do Aluno
+    alt Se usuário não for Aluno ou sessão inválida
+        AC --> A : Redireciona para /login
+        deactivate AC
+    else Sessão válida
+        AC -> US : 3: findAlunoById(idUsuarioLogado)
+        activate US
+        US -> UDAO : 3.1: findById(idUsuarioLogado)
+        activate UDAO
+        UDAO -> DB : 3.1.1: SELECT Aluno
+        activate DB
+        DB --> UDAO : 3.1.2: AlunoLogado
+        deactivate DB
+        UDAO --> US : 3.1.3: AlunoLogado
+        deactivate UDAO
+        US --> AC : 3.2: AlunoLogado
+        deactivate US
+
+        AC -> US : 4: getExtratoAluno(alunoLogado)
+        activate US
+        US -> TDAO : 4.1: findByAluno(alunoLogado)
+        activate TDAO
+        TDAO -> DB : 4.1.1: SELECT Transacao WHERE aluno = alunoLogado
+        activate DB
+        DB --> TDAO : 4.1.2: Lista de Transações
+        deactivate DB
+        TDAO --> US : 4.1.3: Lista de Transações
+        deactivate TDAO
+        US --> AC : 4.2: Lista de Transações
+        deactivate US
+
+        AC -> AC : 5: Adiciona Aluno e Lista de Transações ao Model
+        AC --> A : 6: Exibe aluno/extrato.html
+        deactivate AC
+    end
+end
+@enduml

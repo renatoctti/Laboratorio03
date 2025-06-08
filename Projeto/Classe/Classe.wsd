@@ -1,0 +1,159 @@
+@startuml Diagrama De Classe
+skinparam handwritten false
+skinparam style strictuml
+skinparam classAttributeIconSize 0
+
+title Diagrama de Classes do Sistema
+
+package "Modelos (Entidades)" {
+    class Usuario {
+        -id: Long
+        -email: String
+        -senha: String
+        -role: String
+    }
+
+    class Aluno {
+        -id: Long
+        -ra: String
+        -nome: String
+        -moedas: int
+    }
+
+    class Professor {
+        -id: Long
+        -nome: String
+        -disciplina: String
+    }
+
+    class Empresa {
+        -id: Long
+        -cnpj: String
+        -razaoSocial: String
+        -nomeFantasia: String
+    }
+
+    class Vantagem {
+        -id: Long
+        -nome: String
+        -descricao: String
+        -custoEmMoedas: int
+        -vendida: boolean
+        -imageUrl: String
+        --
+        +empresaParceira: Empresa
+        +alunoComprador: Aluno
+    }
+
+    class Transacao {
+        -id: Long
+        -valor: int
+        -data: LocalDate
+        -tipo: String
+        --
+        +aluno: Aluno
+        +professor: Professor
+    }
+}
+
+package "Camada de Acesso a Dados (DAO)" {
+    interface UsuarioDAO {
+        +save(Usuario): Usuario
+        +findById(Long): Optional<Usuario>
+        +findByEmail(String): Optional<Usuario>
+    }
+
+    interface AlunoDAO {
+        +save(Aluno): Aluno
+        +findById(Long): Optional<Aluno>
+        +findAll(): List<Aluno>
+    }
+
+    interface ProfessorDAO {
+        +save(Professor): Professor
+        +findById(Long): Optional<Professor>
+    }
+
+    interface EmpresaDAO {
+        +save(Empresa): Empresa
+        +findById(Long): Optional<Empresa>
+        +findByEmail(String): Optional<Empresa>
+    }
+
+    interface VantagemDAO {
+        +save(Vantagem): Vantagem
+        +findById(Long): Optional<Vantagem>
+        +findAll(): List<Vantagem>
+        +findByEmpresaParceira(Empresa): List<Vantagem>
+        +findByVendidaFalseAndAlunoCompradorIsNull(): List<Vantagem>
+        +findByVendidaTrueAndAlunoCompradorOrderByNomeAsc(Aluno): List<Vantagem>
+        +findByEmpresaParceiraAndVendidaTrue(Empresa): List<Vantagem>
+        +findByEmpresaParceiraAndVendidaFalse(Empresa): List<Vantagem>
+        +delete(Vantagem): void
+    }
+
+    interface TransacaoDAO {
+        +save(Transacao): Transacao
+        +findByAluno(Aluno): List<Transacao>
+        +findByProfessor(Professor): List<Transacao>
+    }
+}
+
+package "Camada de Serviço" {
+    class UsuarioService {
+        +autenticarUsuario(String, String): Optional<Usuario>
+        +findAlunoById(Long): Optional<Aluno>
+        +findProfessorById(Long): Optional<Professor>
+        +findEmpresaByEmail(String): Optional<Empresa>
+        +getExtratoAluno(Aluno): List<Transacao>
+        +getExtratoProfessor(Professor): List<Transacao>
+    }
+
+    class AlunoService {
+        +listarTodosAlunos(): List<Aluno>
+        +buscarAlunoPorId(Long): Optional<Aluno>
+    }
+
+    class VantagemService {
+        +cadastrarVantagem(Vantagem): Vantagem
+        +listarTodasVantagens(): List<Vantagem>
+        +buscarVantagemPorId(Long): Optional<Vantagem>
+        +listarVantagensPorEmpresa(Empresa): List<Vantagem>
+        +listarVantagensDisponiveisPorEmpresa(Empresa): List<Vantagem>
+        +listarVantagensVendidasPorEmpresa(Empresa): List<Vantagem>
+        +deletarVantagem(Long): void
+        +comprarVantagem(Aluno, Vantagem): void
+        +listarVantagensCompradasPorAluno(Aluno): List<Vantagem>
+    }
+
+    class TransacaoService {
+        +enviarMoedas(Professor, Aluno, int): void
+    }
+}
+
+' Relacionamentos de Herança'
+Usuario <|-- Aluno
+Usuario <|-- Professor
+Usuario <|-- Empresa
+
+' Relacionamentos de Associação (Modelos)'
+Empresa "1" -- "N" Vantagem : empresaParceira
+Aluno "1" -- "N" Transacao : aluno
+Professor "1" -- "N" Transacao : professor
+Aluno "0..1" -- "N" Vantagem : alunoComprador
+
+' Relacionamentos de Dependência (Serviço usa DAO)'
+UsuarioService ..> UsuarioDAO
+UsuarioService ..> AlunoDAO
+UsuarioService ..> ProfessorDAO
+UsuarioService ..> EmpresaDAO
+UsuarioService ..> TransacaoDAO
+
+AlunoService ..> AlunoDAO
+
+VantagemService ..> VantagemDAO
+VantagemService ..> AlunoDAO
+
+TransacaoService ..> AlunoDAO
+TransacaoService ..> TransacaoDAO
+@enduml
