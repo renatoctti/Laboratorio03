@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList; // NOVIDADE
+import java.util.Comparator; // NOVIDADE
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -26,173 +28,188 @@ import jakarta.servlet.http.HttpSession;
 @RequestMapping("/home/aluno")
 public class AlunoController {
 
-  @Autowired
-  VantagemService vantagemService;
+    @Autowired
+    VantagemService vantagemService;
 
-  @Autowired
-  UsuarioService usuarioService;
+    @Autowired
+    UsuarioService usuarioService;
 
-  @GetMapping
-  public String homeAluno(HttpSession session, Model model) {
-    Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
+    @GetMapping
+    public String homeAluno(HttpSession session, Model model) {
+        Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
 
-    if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
-      return "redirect:/login";
+        if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
+            return "redirect:/login";
+        }
+
+        Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
+        if (!alunoOpt.isPresent()) {
+            session.invalidate();
+            return "redirect:/login?error=Aluno+nao+encontrado";
+        }
+        Aluno aluno = alunoOpt.get();
+
+        model.addAttribute("aluno", aluno);
+        session.setAttribute("usuarioLogado", aluno);
+
+        List<Vantagem> todasVantagens = vantagemService.listarTodasVantagens();
+        model.addAttribute("todasVantagens", todasVantagens);
+
+        return "home_aluno";
     }
 
-    Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
-    if (!alunoOpt.isPresent()) {
-      session.invalidate();
-      return "redirect:/login?error=Aluno+nao+encontrado";
-    }
-    Aluno aluno = alunoOpt.get();
+    @GetMapping("/extrato")
+    public String exibirExtratoAluno(HttpSession session, Model model) {
+        Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
 
-    model.addAttribute("aluno", aluno);
-    session.setAttribute("usuarioLogado", aluno);
+        if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
+            return "redirect:/login";
+        }
 
-    // O listarTodasVantagens agora filtra as não vendidas E sem comprador
-    List<Vantagem> todasVantagens = vantagemService.listarTodasVantagens();
-    model.addAttribute("todasVantagens", todasVantagens);
+        Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
+        if (!alunoOpt.isPresent()) {
+            session.invalidate();
+            return "redirect:/login?error=Aluno+nao+encontrado";
+        }
+        Aluno aluno = alunoOpt.get();
+        session.setAttribute("usuarioLogado", aluno);
 
-    return "home_aluno";
-  }
+        model.addAttribute("aluno", aluno);
 
-  @GetMapping("/extrato")
-  public String exibirExtratoAluno(HttpSession session, Model model) {
-    Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
+        // Coleta transações de moedas
+        List<Transacao> extratoMoedas = usuarioService.getExtratoAluno(aluno);
+        // Coleta vantagens compradas
+        List<Vantagem> vantagensCompradas = vantagemService.listarVantagensCompradasPorAluno(aluno);
 
-    if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
-      return "redirect:/login";
-    }
+        // Cria uma lista unificada para o extrato
+        List<Object> extratoUnificado = new ArrayList<>();
+        extratoUnificado.addAll(extratoMoedas);
+        extratoUnificado.addAll(vantagensCompradas);
 
-    Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
-    if (!alunoOpt.isPresent()) {
-      session.invalidate();
-      return "redirect:/login?error=Aluno+nao+encontrado";
-    }
-    Aluno aluno = alunoOpt.get();
-    session.setAttribute("usuarioLogado", aluno);
+        // Ordena a lista unificada pela data (mais recente primeiro)
+        // Usa uma expressão lambda para comparar a data da transação ou da compra da vantagem
+        extratoUnificado.sort(Comparator.comparing((Object item) -> { // AQUI: Adicionado o tipo explícito para 'item'
+            if (item instanceof Transacao) {
+                return ((Transacao) item).getDataTransacao();
+            } else if (item instanceof Vantagem) {
+                return ((Vantagem) item).getDataCompra();
+            }
+            return null; // Caso um tipo inesperado apareça, embora não deva
+        }, Comparator.nullsLast(Comparator.reverseOrder()))); // Ordena do mais recente para o mais antigo, nulos por último
 
-    model.addAttribute("aluno", aluno);
+        model.addAttribute("extratoUnificado", extratoUnificado); // Envia a lista unificada para o HTML
 
-    List<Transacao> extrato = usuarioService.getExtratoAluno(aluno);
-    model.addAttribute("extrato", extrato);
-
-    return "aluno/extrato";
-  }
-
-  @GetMapping("/confirmar-compra/{id}")
-  public String mostrarConfirmacaoCompra(
-      @PathVariable("id") Long vantagemId,
-      HttpSession session,
-      Model model,
-      RedirectAttributes redirectAttributes) {
-    Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
-
-    if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
-      return "redirect:/login";
+        return "aluno/extrato";
     }
 
-    Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
-    if (!alunoOpt.isPresent()) {
-      session.invalidate();
-      redirectAttributes.addFlashAttribute("error", "Aluno não encontrado.");
-      return "redirect:/login";
-    }
-    Aluno aluno = alunoOpt.get();
-    session.setAttribute("usuarioLogado", aluno);
+    @GetMapping("/confirmar-compra/{id}")
+    public String mostrarConfirmacaoCompra(
+            @PathVariable("id") Long vantagemId,
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirectAttributes
+    ) {
+        Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
 
-    Optional<Vantagem> vantagemOpt = vantagemService.buscarVantagemPorId(vantagemId);
-    if (!vantagemOpt.isPresent()) {
-      redirectAttributes.addFlashAttribute("error", "Vantagem não encontrada.");
-      return "redirect:/home/aluno";
-    }
-    Vantagem vantagem = vantagemOpt.get();
+        if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
+            return "redirect:/login";
+        }
 
-    if (vantagem.isVendida()) {
-      redirectAttributes.addFlashAttribute("error", "Esta vantagem já foi comprada e não está mais disponível.");
-      return "redirect:/home/aluno";
-    }
-    if (aluno.getMoedas() < vantagem.getCustoEmMoedas()) {
-      redirectAttributes.addFlashAttribute("error", "Moedas insuficientes para comprar esta vantagem.");
-      return "redirect:/home/aluno";
-    }
+        Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
+        if (!alunoOpt.isPresent()) {
+            session.invalidate();
+            redirectAttributes.addFlashAttribute("error", "Aluno não encontrado.");
+            return "redirect:/login";
+        }
+        Aluno aluno = alunoOpt.get();
+        session.setAttribute("usuarioLogado", aluno);
 
-    model.addAttribute("aluno", aluno);
-    model.addAttribute("vantagem", vantagem);
+        Optional<Vantagem> vantagemOpt = vantagemService.buscarVantagemPorId(vantagemId);
+        if (!vantagemOpt.isPresent()) {
+            redirectAttributes.addFlashAttribute("error", "Vantagem não encontrada.");
+            return "redirect:/home/aluno";
+        }
+        Vantagem vantagem = vantagemOpt.get();
 
-    return "aluno/confirmar_compra";
-  }
+        if (vantagem.isVendida()) {
+            redirectAttributes.addFlashAttribute("error", "Esta vantagem já foi comprada e não está mais disponível.");
+            return "redirect:/home/aluno";
+        }
+        if (aluno.getMoedas() < vantagem.getCustoEmMoedas()) {
+            redirectAttributes.addFlashAttribute("error", "Moedas insuficientes para comprar esta vantagem.");
+            return "redirect:/home/aluno";
+        }
 
-  @PostMapping("/comprar-vantagem")
-  public String comprarVantagem(
-      @RequestParam("vantagemId") Long vantagemId,
-      HttpSession session,
-      RedirectAttributes redirectAttributes) {
-    Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
+        model.addAttribute("aluno", aluno);
+        model.addAttribute("vantagem", vantagem);
 
-    if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
-      redirectAttributes.addFlashAttribute("error", "Acesso negado.");
-      return "redirect:/login";
-    }
-
-    Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
-    if (!alunoOpt.isPresent()) {
-      redirectAttributes.addFlashAttribute("error", "Aluno não encontrado.");
-      session.invalidate();
-      return "redirect:/login";
-    }
-    Aluno aluno = alunoOpt.get();
-
-    Optional<Vantagem> vantagemOpt = vantagemService.buscarVantagemPorId(vantagemId);
-    if (!vantagemOpt.isPresent()) {
-      redirectAttributes.addFlashAttribute("error", "Vantagem não encontrada.");
-      return "redirect:/home/aluno";
-    }
-    Vantagem vantagem = vantagemOpt.get();
-
-    try {
-      // A lógica de setar o alunoComprador está no VantagemService.comprarVantagem
-      vantagemService.comprarVantagem(aluno, vantagem);
-      redirectAttributes.addFlashAttribute("success",
-          "Vantagem '" + vantagem.getNome() + "' comprada com sucesso! Moedas deduzidas.");
-      // Atualiza o aluno na sessão com o novo saldo (importante para exibir saldo
-      // atualizado)
-      session.setAttribute("usuarioLogado", usuarioService.findAlunoById(aluno.getId()).get());
-
-    } catch (RuntimeException e) {
-      redirectAttributes.addFlashAttribute("error", "Erro ao comprar vantagem: " + e.getMessage());
-      System.err.println("Erro ao comprar vantagem: " + e.getMessage());
-      e.printStackTrace();
+        return "aluno/confirmar_compra";
     }
 
-    return "redirect:/home/aluno";
-  }
+    @PostMapping("/comprar-vantagem")
+    public String comprarVantagem(
+            @RequestParam("vantagemId") Long vantagemId,
+            HttpSession session,
+            RedirectAttributes redirectAttributes
+    ) {
+        Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
 
-  // NOVIDADE AQUI: Endpoint para listar as vantagens compradas pelo aluno
-  @GetMapping("/minhas-vantagens")
-  public String minhasVantagens(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
-    Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
+        if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
+            redirectAttributes.addFlashAttribute("error", "Acesso negado.");
+            return "redirect:/login";
+        }
 
-    if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
-      redirectAttributes.addFlashAttribute("error", "Acesso negado.");
-      return "redirect:/login";
+        Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
+        if (!alunoOpt.isPresent()) {
+            redirectAttributes.addFlashAttribute("error", "Aluno não encontrado.");
+            session.invalidate();
+            return "redirect:/login";
+        }
+        Aluno aluno = alunoOpt.get();
+
+        Optional<Vantagem> vantagemOpt = vantagemService.buscarVantagemPorId(vantagemId);
+        if (!vantagemOpt.isPresent()) {
+            redirectAttributes.addFlashAttribute("error", "Vantagem não encontrada.");
+            return "redirect:/home/aluno";
+        }
+        Vantagem vantagem = vantagemOpt.get();
+
+        try {
+            vantagemService.comprarVantagem(aluno, vantagem);
+            redirectAttributes.addFlashAttribute("success", "Vantagem '" + vantagem.getNome() + "' comprada com sucesso! Moedas deduzidas.");
+            session.setAttribute("usuarioLogado", usuarioService.findAlunoById(aluno.getId()).get());
+
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", "Erro ao comprar vantagem: " + e.getMessage());
+            System.err.println("Erro ao comprar vantagem: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return "redirect:/home/aluno";
     }
 
-    Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
-    if (!alunoOpt.isPresent()) {
-      session.invalidate();
-      redirectAttributes.addFlashAttribute("error", "Aluno não encontrado.");
-      return "redirect:/login";
+    @GetMapping("/minhas-vantagens")
+    public String minhasVantagens(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+        Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
+
+        if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
+            redirectAttributes.addFlashAttribute("error", "Acesso negado.");
+            return "redirect:/login";
+        }
+
+        Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
+        if (!alunoOpt.isPresent()) {
+            session.invalidate();
+            redirectAttributes.addFlashAttribute("error", "Aluno não encontrado.");
+            return "redirect:/login";
+        }
+        Aluno aluno = alunoOpt.get();
+        session.setAttribute("usuarioLogado", aluno);
+
+        List<Vantagem> minhasVantagens = vantagemService.listarVantagensCompradasPorAluno(aluno);
+        model.addAttribute("minhasVantagens", minhasVantagens);
+        model.addAttribute("aluno", aluno);
+
+        return "aluno/minhas_vantagens";
     }
-    Aluno aluno = alunoOpt.get();
-    session.setAttribute("usuarioLogado", aluno); // Atualiza o objeto na sessão
-
-    // Busca as vantagens compradas por este aluno
-    List<Vantagem> minhasVantagens = vantagemService.listarVantagensCompradasPorAluno(aluno);
-    model.addAttribute("minhasVantagens", minhasVantagens);
-    model.addAttribute("aluno", aluno); // Passa o aluno para a tela
-
-    return "aluno/minhas_vantagens"; // Nome da nova página HTML
-  }
 }

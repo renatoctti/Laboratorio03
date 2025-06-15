@@ -9,11 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime; // Importar LocalDateTime
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class VantagemService {
+
     @Autowired
     private VantagemDAO vantagemDAO;
 
@@ -66,6 +68,7 @@ public class VantagemService {
 
         vantagem.setVendida(true);
         vantagem.setAlunoComprador(aluno);
+        vantagem.setDataCompra(LocalDateTime.now()); // NOVIDADE: Define a data da compra
         vantagemDAO.save(vantagem);
 
         emailService.sendVantagemConfirmationToAluno(aluno, vantagem);
@@ -83,5 +86,8 @@ public class VantagemService {
     public List<Vantagem> listarVantagensDisponiveisPorEmpresa(Empresa empresa) {
         return vantagemDAO.findByEmpresaParceiraAndVendidaFalse(empresa);
     }
-
 }
+
+
+
+

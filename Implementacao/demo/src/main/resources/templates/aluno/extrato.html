@@ -18,6 +18,7 @@
         --error-red: #dc3545;
         --table-header-bg: #e9ecef; /* Cor de fundo para cabeçalho da tabela */
         --table-border-color: #dee2e6;
+        --purchase-color: #ffc107; /* Cor para compras de vantagem (amarelo/laranja) */
       }
 
       /* Estilos Reset e Básicos */
@@ -90,7 +91,7 @@
       .main-content {
         flex-grow: 1;
         padding: 2rem;
-        max-width: 900px; /* Largura ajustada para a tabela */
+        max-width: 900px;
         margin: 1.5rem auto;
         background-color: #ffffff;
         border-radius: 0.75rem;
@@ -117,7 +118,7 @@
         font-weight: 700;
       }
 
-      /* Estilos para o Saldo de Moedas (reaproveitado) */
+      /* Estilos para o Saldo de Moedas */
       .balance {
         font-size: 1.3rem;
         font-weight: bold;
@@ -143,16 +144,16 @@
       }
 
       .table-responsive {
-        overflow-x: auto; /* Permite scroll horizontal em telas pequenas */
-        -webkit-overflow-scrolling: touch; /* Suaviza o scroll em touch devices */
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
         margin-bottom: 2rem;
       }
 
       .transactions-table {
         width: 100%;
-        border-collapse: collapse; /* Remove espaçamento entre bordas das células */
+        border-collapse: collapse;
         margin-top: 1rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Sombra suave para a tabela */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
       }
 
       .transactions-table th,
@@ -171,22 +172,29 @@
       }
 
       .transactions-table tbody tr:nth-child(even) {
-        background-color: #f2f2f2; /* Fundo cinza claro para linhas pares */
+        background-color: #f2f2f2;
       }
 
       .transactions-table tbody tr:hover {
-        background-color: #e6f7ff; /* Fundo azul claro ao passar o mouse */
+        background-color: #e6f7ff;
       }
 
       .transactions-table td.amount-sent {
-        color: var(--logout-red); /* Vermelho para moedas enviadas */
+        color: var(--logout-red);
         font-weight: bold;
       }
 
       .transactions-table td.amount-received {
-        color: var(--success-green); /* Verde para moedas recebidas */
+        color: var(--success-green);
         font-weight: bold;
       }
+
+      /* NOVO: Estilo para "Compra" na tabela */
+      .transactions-table td.type-purchase {
+        color: var(--purchase-color);
+        font-weight: bold;
+      }
+
 
       .no-transactions {
         text-align: center;
@@ -200,7 +208,7 @@
 
       /* Estilos para o botão de voltar */
       .back-button {
-        background-color: #6c757d; /* Cinza */
+        background-color: #6c757d;
         color: white;
         padding: 0.8rem 1.8rem;
         border: none;
@@ -213,7 +221,7 @@
         text-decoration: none;
         display: inline-block;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        margin-top: 2rem; /* Espaço acima do botão */
+        margin-top: 2rem;
       }
       .back-button:hover {
         background-color: #5a6268;
@@ -265,6 +273,11 @@
         .extrato-section h2 {
           font-size: 1.5rem;
         }
+        .transactions-table th,
+        .transactions-table td {
+          padding: 8px 10px;
+          font-size: 0.8em;
+        }
       }
 
       @media (max-width: 480px) {
@@ -285,10 +298,8 @@
         h1 {
           font-size: 1.5rem;
         }
-        .transactions-table th,
-        .transactions-table td {
-          padding: 8px 10px; /* Reduz padding da tabela em mobile */
-          font-size: 0.8em;
+        p {
+          font-size: 0.9rem;
         }
       }
     </style>
@@ -304,7 +315,7 @@
     </header>
 
     <main class="main-content">
-      <h1>Extrato de Moedas</h1>
+      <h1>Extrato do Aluno</h1>
 
       <p class="balance">
         Seu Saldo Atual:
@@ -312,36 +323,52 @@
       </p>
 
       <section class="extrato-section">
-        <h2>Histórico de Recebimentos</h2>
-        <div th:if="${extrato.isEmpty()}" class="no-transactions">
-          <p>Você ainda não recebeu nenhuma transferência de moedas.</p>
+        <h2>Histórico de Atividades</h2>
+        <div th:if="${extratoUnificado.isEmpty()}" class="no-transactions">
+          <p>Você ainda não tem atividades registradas no extrato.</p>
         </div>
-        <div th:unless="${extrato.isEmpty()}" class="table-responsive">
+        <div th:unless="${extratoUnificado.isEmpty()}" class="table-responsive">
           <table class="transactions-table">
             <thead>
               <tr>
                 <th>Data</th>
                 <th>Tipo</th>
-                <th>Remetente</th>
+                <th>Origem/Destino</th>
                 <th>Quantidade</th>
-                <th>Motivo</th>
+                <!-- 'Motivo' removido -->
               </tr>
             </thead>
             <tbody>
-              <tr th:each="transacao : ${extrato}">
-                <td>
-                  <span
-                    th:text="${#temporals.format(transacao.dataTransacao, 'dd/MM/yyyy HH:mm')}"
-                  ></span>
+              <tr th:each="item : ${extratoUnificado}">
+                <!-- Condicional para Transação de Moedas -->
+                <td th:if="${item instanceof T(com.example.demo.model.Transacao)}">
+                  <span th:text="${#temporals.format(item.dataTransacao, 'dd/MM/yyyy HH:mm')}"></span>
                 </td>
-                <td><span class="amount-received">Recebimento</span></td>
-                <td>
-                  <span th:text="${transacao.professorOrigem.nome}"></span>
+                <td th:if="${item instanceof T(com.example.demo.model.Vantagem)}">
+                  <span th:text="${#temporals.format(item.dataCompra, 'dd/MM/yyyy HH:mm')}"></span>
                 </td>
-                <td class="amount-received">
-                  +<span th:text="${transacao.quantidadeMoedas}"></span>
+
+                <td th:if="${item instanceof T(com.example.demo.model.Transacao)}" class="amount-received">
+                  Recebimento
                 </td>
-                <td><span th:text="${transacao.motivo}"></span></td>
+                <td th:if="${item instanceof T(com.example.demo.model.Vantagem)}" class="type-purchase">
+                  Compra
+                </td>
+
+                <td th:if="${item instanceof T(com.example.demo.model.Transacao)}">
+                  <span th:text="${item.professorOrigem.nome}"></span>
+                </td>
+                <td th:if="${item instanceof T(com.example.demo.model.Vantagem)}">
+                  <span th:text="${item.empresaParceira.nomeFantasia}"></span>
+                </td>
+
+                <td th:if="${item instanceof T(com.example.demo.model.Transacao)}" class="amount-received">
+                  +<span th:text="${item.quantidadeMoedas}"></span>
+                </td>
+                <td th:if="${item instanceof T(com.example.demo.model.Vantagem)}" class="amount-sent">
+                  -<span th:text="${item.custoEmMoedas}"></span>
+                </td>
+                <!-- Coluna 'Motivo' removida -->
               </tr>
             </tbody>
           </table>

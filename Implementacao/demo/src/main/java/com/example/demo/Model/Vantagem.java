@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime; // Importar LocalDateTime
 
 @Entity
 @Table(name = "vantagem")
@@ -36,25 +37,29 @@ public class Vantagem {
     @Column(nullable = true, length = 1024)
     private String imageUrl;
 
-    // NOVIDADE AQUI: Campo para armazenar o Aluno que comprou a vantagem
-    @ManyToOne // Uma vantagem pode ser comprada por um Aluno (ou nenhum)
-    @JoinColumn(name = "aluno_comprador_id", nullable = true) // Pode ser nulo se não vendida
+    @ManyToOne
+    @JoinColumn(name = "aluno_comprador_id", nullable = true)
     private Aluno alunoComprador;
+
+    @Column(nullable = true) // Pode ser nulo se a vantagem ainda não foi comprada
+    private LocalDateTime dataCompra; // NOVO CAMPO: Data e hora da compra
 
     // Construtor padrão
     public Vantagem() {
         this.vendida = false;
+        this.dataCompra = null; // Inicializa como nulo por padrão
     }
 
-    // Construtor com todos os campos (atualizado para incluir imageUrl e alunoComprador)
-    public Vantagem(String nome, String descricao, int custoEmMoedas, Empresa empresaParceira, String imageUrl, Aluno alunoComprador) {
+    // Construtor com campos básicos (atualizado para incluir alunoComprador e dataCompra)
+    public Vantagem(String nome, String descricao, int custoEmMoedas, Empresa empresaParceira, String imageUrl, Aluno alunoComprador, LocalDateTime dataCompra) {
         this.nome = nome;
         this.descricao = descricao;
         this.custoEmMoedas = custoEmMoedas;
         this.empresaParceira = empresaParceira;
-        this.vendida = false; // Inicializa como não vendida
+        this.vendida = false;
         this.imageUrl = imageUrl;
-        this.alunoComprador = alunoComprador; // Pode ser nulo no construtor
+        this.alunoComprador = alunoComprador;
+        this.dataCompra = dataCompra;
     }
 
     // Getters e Setters
@@ -120,5 +125,14 @@ public class Vantagem {
 
     public void setAlunoComprador(Aluno alunoComprador) {
         this.alunoComprador = alunoComprador;
+    }
+
+    // NOVO: Getter e Setter para dataCompra
+    public LocalDateTime getDataCompra() {
+        return dataCompra;
+    }
+
+    public void setDataCompra(LocalDateTime dataCompra) {
+        this.dataCompra = dataCompra;
     }
 }
