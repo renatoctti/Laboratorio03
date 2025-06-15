@@ -1,0 +1,32 @@
+@startuml Extrato
+skinparam handwritten false
+skinparam style strictuml
+
+title Diagrama de Comunicação - Consultas de Extrato (Professor e Aluno)
+
+actor Aluno as aluno
+actor Professor as professor
+
+participant AlunoController as ac
+participant ProfessorController as pc
+participant UsuarioService as us
+participant TransacaoDAO as tdao
+
+database "Banco de Dados" as db
+
+' Fluxo para Consulta de Extrato (Aluno)
+group Consulta de Extrato - Aluno
+    aluno -> ac : 1.1: GET /home/aluno/extrato
+    ac -> us : 1.2: getExtratoAluno(aluno) : 1.3: findByAluno()
+    us -> tdao : 1.4: SELECT Transacoes
+    tdao -> db : 1.5: consulta()
+end
+
+' Fluxo para Consulta de Extrato (Professor)
+group Consulta de Extrato - Professor
+    professor -> pc : 2.1: GET /home/professor/extrato
+    pc -> us : 2.2: getExtratoProfessor(prof) : 2.3: findByProfessor()
+    us -> tdao : 2.4: SELECT Transacoes
+    tdao -> db : 2.5: consulta()
+end
+@enduml

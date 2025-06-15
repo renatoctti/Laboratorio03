@@ -1,0 +1,28 @@
+
+@startuml Email
+skinparam handwritten false
+skinparam style strictuml
+
+title Diagrama de Comunicação - Envio de E-mails (Professor -> Aluno)
+
+actor Professor as professor
+actor Aluno as aluno
+
+participant TransacaoService as ts
+participant EmailService as es
+
+' Representação conceitual do envio de e-mail externo
+participant "Servidor de Email (SMTP)" as smtp
+
+' Fluxo focado apenas no envio de emails após a transação
+' Assumimos que a transação e as atualizações de saldo já ocorreram no TransacaoService
+
+ts -> es : 1.1: sendCoinTransferConfirmationToProfessor(prof, aluno, quant, transacao)
+es -> smtp : 1.1.1: Enviar Email (Professor)
+smtp -> professor : 1.1.2: Email de Confirmação de Envio
+
+ts -> es : 1.2: sendCoinReceptionConfirmationToAluno(aluno, prof, quant, transacao)
+es -> smtp : 1.2.1: Enviar Email (Aluno)
+smtp -> aluno : 1.2.2: Email de Confirmação de Recebimento
+
+@enduml

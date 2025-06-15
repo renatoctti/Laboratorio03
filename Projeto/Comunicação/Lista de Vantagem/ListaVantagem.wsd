@@ -1,0 +1,24 @@
+@startuml Lista de Vantagem
+skinparam handwritten false
+skinparam style strictuml
+
+title Diagrama de Comunicação - Listagem de Vantagens (Aluno - Disponíveis)
+
+actor Aluno as aluno
+
+participant AlunoController as ac
+participant UsuarioService as us
+participant VantagemService as vs
+participant AlunoDAO as adao
+participant VantagemDAO as vdao
+
+database "Banco de Dados" as db
+
+aluno -> ac : 1.1: GET /home/aluno
+ac -> us : 1.2: findAlunoById()
+us -> adao : 1.3: findById()
+adao -> db : 1.4: SELECT Aluno
+ac -> vs : 1.5: listarTodasVantagens() : 1.6: findByVendidaFalseAndAlunoCompradorIsNull()
+vs -> vdao : 1.7: SELECT Vantagens
+vdao -> db : 1.8: consulta()
+@enduml

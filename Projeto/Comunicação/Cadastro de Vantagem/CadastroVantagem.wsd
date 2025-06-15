@@ -1,0 +1,24 @@
+@startuml CadastroVantagem
+skinparam handwritten false
+skinparam style strictuml
+
+title Diagrama de Comunicação - Cadastro de Vantagens (Empresa)
+
+actor Empresa as empresa
+
+participant EmpresaController as ec
+participant UsuarioService as us
+participant VantagemService as vs
+participant EmpresaDAO as edao
+participant VantagemDAO as vdao
+
+database "Banco de Dados" as db
+
+empresa -> ec : 1.1: GET /cadastro-vantagem
+ec -> us : 1.2: findEmpresaByEmail()
+us -> edao : 1.3: findByEmail()
+edao -> db : 1.4: SELECT Empresa
+ec -> vs : 1.5: POST /cadastro-vantagem (dados) : 1.6: cadastrarVantagem(vantagem)
+vs -> vdao : 1.7: save(vantagem) : 1.8: INSERT Vantagem
+vdao -> db : 1.9: persiste()
+@enduml

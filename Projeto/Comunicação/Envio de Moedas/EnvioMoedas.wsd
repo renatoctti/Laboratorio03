@@ -1,0 +1,32 @@
+@startuml Envio de Moedas
+skinparam handwritten false
+skinparam style strictuml
+
+title Diagrama de Comunicação - Envio de Moedas (Professor)
+
+actor Professor as professor
+
+participant ProfessorController as pc
+participant UsuarioService as us
+participant AlunoService as as
+participant TransacaoService as ts
+participant AlunoDAO as adao
+participant ProfessorDAO as pdao
+participant TransacaoDAO as tdao
+
+database "Banco de Dados" as db
+
+professor -> pc : 1.1: GET /enviar-moedas
+pc -> us : 1.2: findProfessorById()
+us -> pdao : 1.3: findById()
+pdao -> db : 1.4: SELECT Professor
+pc -> as : 1.5: listarTodosAlunos() : 1.6: findAll()
+as -> adao : 1.7: SELECT Alunos
+adao -> db : 1.8: consulta()
+professor -> pc : 1.9: POST /enviar-moedas (alunoId, quant)
+pc -> ts : 1.10: enviarMoedas(prof, aluno, quant) : 1.11: debita/credita; save()
+ts -> adao : 1.12: save(aluno) : 1.13: UPDATE Aluno
+adao -> db : 1.14: atualiza()
+ts -> tdao : 1.15: save(transacao) : 1.16: INSERT Transacao
+tdao -> db : 1.17: persiste()
+@enduml

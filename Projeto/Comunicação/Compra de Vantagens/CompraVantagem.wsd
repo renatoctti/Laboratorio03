@@ -1,0 +1,30 @@
+@startuml Compra de Vantagem
+skinparam handwritten false
+skinparam style strictuml
+
+title Diagrama de Comunicação - Compra de Vantagens (Aluno)
+
+actor Aluno as aluno
+
+participant AlunoController as ac
+participant VantagemService as vs
+participant UsuarioService as us
+participant AlunoDAO as adao
+participant VantagemDAO as vdao
+participant TransacaoDAO as tdao
+
+database "Banco de Dados" as db
+
+aluno -> ac : 1.1: GET /confirmar-compra/{id}
+ac -> vs : 1.2: buscarVantagemPorId(id) : 1.3: findById()
+vs -> vdao : 1.4: SELECT Vantagem
+vdao -> db : 1.5: consulta()
+aluno -> ac : 1.6: POST /comprar-vantagem (id)
+ac -> vs : 1.7: comprarVantagem(aluno, vantagem) : 1.8: debita/credita; setVendida; setComprador; save()
+vs -> adao : 1.9: save(aluno) : 1.10: UPDATE Aluno
+adao -> db : 1.11: atualiza()
+vs -> vdao : 1.12: save(vantagem) : 1.13: UPDATE Vantagem
+vdao -> db : 1.14: atualiza()
+vs -> tdao : 1.15: save(transacao) : 1.16: INSERT Transacao
+tdao -> db : 1.17: persiste()
+@enduml

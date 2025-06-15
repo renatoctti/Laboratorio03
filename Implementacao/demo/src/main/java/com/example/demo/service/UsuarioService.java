@@ -14,13 +14,13 @@ import com.example.demo.model.Aluno;
 import com.example.demo.model.Empresa;
 import com.example.demo.model.Professor;
 import com.example.demo.model.Transacao;
-import com.example.demo.model.Usuario; // Mantenha o import de Usuario, pois buscarUsuarioPorEmail ainda retorna Usuario
-import jakarta.transaction.Transactional;
+import com.example.demo.model.Usuario;
+import jakarta.transaction.Transactional; // Manter este import para @Transactional
 
 @Service
 public class UsuarioService {
    @Autowired
-   private UsuarioDAO usuarioDAO; // Ainda útil para buscar por email
+   private UsuarioDAO usuarioDAO;
    @Autowired
    private AlunoDAO alunoDAO;
    @Autowired
@@ -28,7 +28,10 @@ public class UsuarioService {
    @Autowired
    private ProfessorDAO professorDAO;
    @Autowired
-   private TransacaoDAO transacaoDAO;
+   private TransacaoDAO transacaoDAO; // Mantenha, para extratos e salvar novas transações
+
+   @Autowired
+   private EmailService emailService; // NOVIDADE: Injeta o serviço de e-mail
 
    @Transactional
    public Usuario cadastrarUsuario(Usuario usuario) {
@@ -37,8 +40,8 @@ public class UsuarioService {
 
    @Transactional
    public Aluno cadastrarAluno(Aluno aluno) {
-      aluno.setRole("ALUNO"); // Garante que a role esteja correta antes de salvar
-      return alunoDAO.save(aluno); // O Hibernate cuidará da persistência em ambas as tabelas
+      aluno.setRole("ALUNO");
+      return alunoDAO.save(aluno);
    }
 
    @Transactional
@@ -74,38 +77,46 @@ public class UsuarioService {
       return alunoDAO.findById(id);
    }
 
-   @Transactional
-   public void transferirMoedas(Professor professorOrigem, Aluno alunoDestino, int quantidade, String motivo) { // Adicionado
-                                                                                                                // 'motivo'
-      if (professorOrigem.getMoedas() < quantidade) {
+   @Transactional // Garante que toda a operação (débito/crédito/registro/e-mail) seja atômica
+   public void transferirMoedas(Professor professorOrigem, Aluno alunoDestino, int quantidadeMoedas, String motivo) {
+      if (quantidadeMoedas <= 0) {
+         throw new IllegalArgumentException("A quantidade de moedas deve ser positiva.");
+      }
+      if (alunoDestino == null || professorOrigem == null) {
+         throw new IllegalArgumentException("Aluno e Professor devem ser válidos para a transação.");
+      }
+      if (professorOrigem.getMoedas() < quantidadeMoedas) {
          throw new RuntimeException("Saldo insuficiente do professor.");
       }
-      if (quantidade <= 0) {
-         throw new RuntimeException("A quantidade deve ser positiva.");
-      }
-      if (motivo == null || motivo.trim().isEmpty()) { // Validação do motivo
-         throw new RuntimeException("O motivo da transferência é obrigatório.");
+      if (motivo == null || motivo.trim().isEmpty()) {
+         throw new IllegalArgumentException("O motivo da transferência é obrigatório.");
       }
 
       // Subtrai do professor
-      professorOrigem.setMoedas(professorOrigem.getMoedas() - quantidade);
-      professorDAO.save(professorOrigem);
+      professorOrigem.setMoedas(professorOrigem.getMoedas() - quantidadeMoedas);
+      professorDAO.save(professorOrigem); // Salva as alterações no professor
 
       // Adiciona ao aluno
-      alunoDestino.setMoedas(alunoDestino.getMoedas() + quantidade);
-      alunoDAO.save(alunoDestino);
+      alunoDestino.setMoedas(alunoDestino.getMoedas() + quantidadeMoedas);
+      alunoDAO.save(alunoDestino); // Salva as alterações no aluno
 
-      // NOVIDADE AQUI: Registrar a transação
-      Transacao transacao = new Transacao(professorOrigem, alunoDestino, quantidade, motivo);
-      transacaoDAO.save(transacao); // Salva a transação no banco de dados
+      // Cria e salva a transação
+      Transacao transacao = new Transacao(professorOrigem, alunoDestino, quantidadeMoedas, motivo);
+      // A dataTransacao já é definida no construtor da Transacao como
+      // LocalDateTime.now()
+      transacaoDAO.save(transacao); // Salva a transação
+
+      // Envia e-mails de confirmação (agora chamando EmailService diretamente daqui)
+      emailService.sendCoinTransferConfirmationToProfessor(professorOrigem, alunoDestino, quantidadeMoedas, transacao);
+      emailService.sendCoinReceptionConfirmationToAluno(alunoDestino, professorOrigem, quantidadeMoedas, transacao);
    }
 
-   // NOVO MÉTODO: Para obter o histórico de transações de um professor
+   // Métodos para obter o histórico de transações (já estavam aqui e permanecem)
    public List<Transacao> getExtratoProfessor(Professor professor) {
       return transacaoDAO.findByProfessorOrigemOrderByDataTransacaoDesc(professor);
    }
 
-   public List<Transacao> getExtratoAluno(Aluno aluno){
+   public List<Transacao> getExtratoAluno(Aluno aluno) {
       return transacaoDAO.findByAlunoDestinoOrderByDataTransacaoDesc(aluno);
    }
 }
