@@ -14,12 +14,14 @@ import java.util.Optional;
 
 @Service
 public class VantagemService {
-
     @Autowired
     private VantagemDAO vantagemDAO;
 
     @Autowired
     private AlunoDAO alunoDAO;
+
+    @Autowired
+    private EmailService emailService;
 
     @Transactional
     public Vantagem cadastrarVantagem(Vantagem vantagem) {
@@ -29,15 +31,12 @@ public class VantagemService {
         if (vantagem.getEmpresaParceira() == null || vantagem.getEmpresaParceira().getId() == null) {
             throw new IllegalArgumentException("Vantagem deve estar vinculada a uma empresa parceira.");
         }
-        vantagem.setVendida(false); // Garante que novas vantagens sejam criadas como não vendidas
-        // imageUrl já será populado pelo formulário
+        vantagem.setVendida(false);
         return vantagemDAO.save(vantagem);
     }
 
     public List<Vantagem> listarTodasVantagens() {
-        // Agora filtra por vantagens não vendidas E sem comprador (garantindo que só
-        // mostre as disponíveis)
-        return vantagemDAO.findByVendidaFalseAndAlunoCompradorIsNull(); // Novo método no DAO
+        return vantagemDAO.findByVendidaFalseAndAlunoCompradorIsNull();
     }
 
     public Optional<Vantagem> buscarVantagemPorId(Long id) {
@@ -68,6 +67,9 @@ public class VantagemService {
         vantagem.setVendida(true);
         vantagem.setAlunoComprador(aluno);
         vantagemDAO.save(vantagem);
+
+        emailService.sendVantagemConfirmationToAluno(aluno, vantagem);
+        emailService.sendVantagemNotificationToEmpresa(vantagem.getEmpresaParceira(), vantagem, aluno);
     }
 
     public List<Vantagem> listarVantagensCompradasPorAluno(Aluno aluno) {
@@ -81,4 +83,5 @@ public class VantagemService {
     public List<Vantagem> listarVantagensDisponiveisPorEmpresa(Empresa empresa) {
         return vantagemDAO.findByEmpresaParceiraAndVendidaFalse(empresa);
     }
+
 }
