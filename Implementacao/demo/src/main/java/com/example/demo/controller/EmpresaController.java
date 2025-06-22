@@ -34,24 +34,10 @@ public class EmpresaController {
   @GetMapping
   public String homeEmpresa(HttpSession session, Model model) {
 
-    Usuario usuario = (Usuario) session.getAttribute("usuarioLogado");
-
-    if (usuario == null || !usuario.getRole().equals("EMPRESA")) {
+    Empresa empresaLogada = validarEAutenticarEmpresa(session, model);
+    if (empresaLogada == null) {
       return "redirect:/login";
     }
-
-    Optional<Empresa> empresaOpt = usuarioService.findEmpresaByEmail(usuario.getEmail());
-
-    if (!empresaOpt.isPresent()) {
-      session.invalidate();
-      model.addAttribute("error", "Dados da empresa não encontrados. Faça login novamente.");
-      return "redirect:/login";
-    }
-
-    Empresa empresaLogada = empresaOpt.get();
-    session.setAttribute("usuarioLogado", empresaLogada);
-
-    model.addAttribute("usuario", empresaLogada);
 
     List<Vantagem> minhasVantagens = vantagemService.listarVantagensDisponiveisPorEmpresa(empresaLogada);
     model.addAttribute("minhasVantagens", minhasVantagens);
@@ -62,20 +48,10 @@ public class EmpresaController {
   @GetMapping("/cadastro-vantagem")
   public String exibirFormularioCadastroVantagem(Model model, HttpSession session,
       RedirectAttributes redirectAttributes) {
-    Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
-    if (usuarioLogado == null || !usuarioLogado.getRole().equals("EMPRESA")) {
-      redirectAttributes.addFlashAttribute("error", "Acesso negado.");
+    Empresa empresaLogada = validarEAutenticarEmpresa(session, redirectAttributes);
+    if (empresaLogada == null) {
       return "redirect:/login";
     }
-
-    Optional<Empresa> empresaOpt = usuarioService.findEmpresaByEmail(usuarioLogado.getEmail());
-    if (!empresaOpt.isPresent()) {
-      session.invalidate();
-      redirectAttributes.addFlashAttribute("error", "Empresa não encontrada.");
-      return "redirect:/login";
-    }
-    Empresa empresaLogada = empresaOpt.get();
-    session.setAttribute("usuarioLogado", empresaLogada);
 
     Vantagem vantagem = new Vantagem();
     model.addAttribute("vantagem", vantagem);
@@ -89,19 +65,11 @@ public class EmpresaController {
       HttpSession session,
       RedirectAttributes redirectAttributes,
       Model model) {
-    Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
-    if (usuarioLogado == null || !usuarioLogado.getRole().equals("EMPRESA")) {
-      redirectAttributes.addFlashAttribute("error", "Acesso negado.");
+    Empresa empresaLogada = validarEAutenticarEmpresa(session, redirectAttributes);
+    if (empresaLogada == null) {
       return "redirect:/login";
     }
 
-    Optional<Empresa> empresaOpt = usuarioService.findEmpresaByEmail(usuarioLogado.getEmail());
-    if (!empresaOpt.isPresent()) {
-      redirectAttributes.addFlashAttribute("error", "Empresa associada não encontrada. Faça login novamente.");
-      session.invalidate();
-      return "redirect:/login";
-    }
-    Empresa empresaLogada = empresaOpt.get();
     vantagem.setEmpresaParceira(empresaLogada); // Associa a empresa logada à vantagem
 
     if (result.hasErrors()) {
@@ -127,20 +95,10 @@ public class EmpresaController {
 
   @GetMapping("/vantagens-vendidas")
   public String vantagensVendidas(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
-    Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
-    if (usuarioLogado == null || !usuarioLogado.getRole().equals("EMPRESA")) {
-      redirectAttributes.addFlashAttribute("error", "Acesso negado.");
+    Empresa empresaLogada = validarEAutenticarEmpresa(session, redirectAttributes);
+    if (empresaLogada == null) {
       return "redirect:/login";
     }
-
-    Optional<Empresa> empresaOpt = usuarioService.findEmpresaByEmail(usuarioLogado.getEmail());
-    if (!empresaOpt.isPresent()) {
-      session.invalidate();
-      redirectAttributes.addFlashAttribute("error", "Empresa não encontrada.");
-      return "redirect:/login";
-    }
-    Empresa empresaLogada = empresaOpt.get();
-    session.setAttribute("usuarioLogado", empresaLogada); // Atualiza a sessão
 
     // Lista as vantagens que esta empresa vendeu
     List<Vantagem> vantagensVendidas = vantagemService.listarVantagensVendidasPorEmpresa(empresaLogada);
@@ -148,6 +106,62 @@ public class EmpresaController {
     model.addAttribute("usuario", empresaLogada); // Passa a empresa para a tela
 
     return "empresa/vantagens_vendidas"; // Nome da nova página HTML
+  }
+
+  /**
+   * Método auxiliar para validar autenticação e autorização da empresa
+   * @param session Sessão HTTP
+   * @param model Modelo para adicionar mensagens de erro
+   * @return Empresa logada ou null se não autorizada
+   */
+  private Empresa validarEAutenticarEmpresa(HttpSession session, Model model) {
+    Usuario usuario = (Usuario) session.getAttribute("usuarioLogado");
+
+    if (usuario == null || !usuario.getRole().equals("EMPRESA")) {
+      return null;
+    }
+
+    Optional<Empresa> empresaOpt = usuarioService.findEmpresaByEmail(usuario.getEmail());
+
+    if (!empresaOpt.isPresent()) {
+      session.invalidate();
+      model.addAttribute("error", "Dados da empresa não encontrados. Faça login novamente.");
+      return null;
+    }
+
+    Empresa empresaLogada = empresaOpt.get();
+    session.setAttribute("usuarioLogado", empresaLogada);
+    model.addAttribute("usuario", empresaLogada);
+
+    return empresaLogada;
+  }
+
+  /**
+   * Método auxiliar para validar autenticação e autorização da empresa (versão com RedirectAttributes)
+   * @param session Sessão HTTP
+   * @param redirectAttributes Atributos para redirecionamento
+   * @return Empresa logada ou null se não autorizada
+   */
+  private Empresa validarEAutenticarEmpresa(HttpSession session, RedirectAttributes redirectAttributes) {
+    Usuario usuario = (Usuario) session.getAttribute("usuarioLogado");
+
+    if (usuario == null || !usuario.getRole().equals("EMPRESA")) {
+      redirectAttributes.addFlashAttribute("error", "Acesso negado.");
+      return null;
+    }
+
+    Optional<Empresa> empresaOpt = usuarioService.findEmpresaByEmail(usuario.getEmail());
+
+    if (!empresaOpt.isPresent()) {
+      session.invalidate();
+      redirectAttributes.addFlashAttribute("error", "Empresa não encontrada. Faça login novamente.");
+      return null;
+    }
+
+    Empresa empresaLogada = empresaOpt.get();
+    session.setAttribute("usuarioLogado", empresaLogada);
+
+    return empresaLogada;
   }
 
 }
