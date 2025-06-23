@@ -1,24 +1,23 @@
-@startuml Lista de Vantagem
+@startuml Diagrama de Comunicação - Listagem de Vantagens (Aluno - Disponíveis)
+
 skinparam handwritten false
 skinparam style strictuml
-
-title Diagrama de Comunicação - Listagem de Vantagens (Aluno - Disponíveis)
+skinparam linetype ortho ' Estilo de linha reta para melhor clareza nas conexões diretas
 
 actor Aluno as aluno
 
-participant AlunoController as ac
-participant UsuarioService as us
-participant VantagemService as vs
-participant AlunoDAO as adao
-participant VantagemDAO as vdao
+rectangle "AlunoController" as ac
+rectangle "UsuarioService" as us
+rectangle "VantagemService" as vs
+rectangle "AlunoDAO" as adao
+rectangle "VantagemDAO" as vdao
+rectangle "Banco de Dados" as db  
 
-database "Banco de Dados" as db
-
-aluno -> ac : 1.1: GET /home/aluno
-ac -> us : 1.2: findAlunoById()
-us -> adao : 1.3: findById()
-adao -> db : 1.4: SELECT Aluno
-ac -> vs : 1.5: listarTodasVantagens() : 1.6: findByVendidaFalseAndAlunoCompradorIsNull()
-vs -> vdao : 1.7: SELECT Vantagens
-vdao -> db : 1.8: consulta()
+aluno -> ac : 1: GET /home/aluno
+ac -> us : 2: findAlunoById()
+us -> adao : 3: findById()
+adao -> db : 4: SELECT Aluno
+ac -> vs : 5: listarTodasVantagens()
+vs -> vdao : 6: findByVendidaFalseAndAlunoCompradorIsNull()
+vdao -> db : 7: SELECT Vantagens
 @enduml

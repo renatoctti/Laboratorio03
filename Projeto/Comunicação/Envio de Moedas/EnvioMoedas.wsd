@@ -1,32 +1,37 @@
-@startuml Envio de Moedas
+@startuml Diagrama de Comunicação - Envio de Moedas (Professor)
+
 skinparam handwritten false
 skinparam style strictuml
-
-title Diagrama de Comunicação - Envio de Moedas (Professor)
+skinparam linetype ortho ' Estilo de linha reta para melhor clareza nas conexões diretas
 
 actor Professor as professor
 
-participant ProfessorController as pc
-participant UsuarioService as us
-participant AlunoService as as
-participant TransacaoService as ts
-participant AlunoDAO as adao
-participant ProfessorDAO as pdao
-participant TransacaoDAO as tdao
+rectangle "ProfessorController" as pc
+rectangle "UsuarioService" as us
+rectangle "AlunoService" as sa
+rectangle "TransacaoService" as ts
+rectangle "AlunoDAO" as adao
+rectangle "ProfessorDAO" as pdao
+rectangle "TransacaoDAO" as tdao
+rectangle "Banco de Dados" as db 
+' Mensagens na ordem sequencial, focando APENAS nas chamadas de operação.
+' Não há setas de retorno explícitas. O retorno de dados é implícito na conclusão da chamada.
 
-database "Banco de Dados" as db
+' Fluxo para Exibir o Formulário (GET)
+professor -> pc : 1: GET /enviar-moedas
+pc -> us : 2: findProfessorById()
+us -> pdao : 3: findById()
+pdao -> db : 4: SELECT Professor
 
-professor -> pc : 1.1: GET /enviar-moedas
-pc -> us : 1.2: findProfessorById()
-us -> pdao : 1.3: findById()
-pdao -> db : 1.4: SELECT Professor
-pc -> as : 1.5: listarTodosAlunos() : 1.6: findAll()
-as -> adao : 1.7: SELECT Alunos
-adao -> db : 1.8: consulta()
-professor -> pc : 1.9: POST /enviar-moedas (alunoId, quant)
-pc -> ts : 1.10: enviarMoedas(prof, aluno, quant) : 1.11: debita/credita; save()
-ts -> adao : 1.12: save(aluno) : 1.13: UPDATE Aluno
-adao -> db : 1.14: atualiza()
-ts -> tdao : 1.15: save(transacao) : 1.16: INSERT Transacao
-tdao -> db : 1.17: persiste()
+pc -> sa : 5: listarTodosAlunos()
+sa -> adao : 6: findAll()
+adao -> db : 7: SELECT Alunos
+
+' Fluxo para Efetivar a Transferência (POST)
+professor -> pc : 8: POST /enviar-moedas (alunoId, quant)
+pc -> ts : 9: enviarMoedas(prof, aluno, quant)
+ts -> adao : 10: save(aluno)
+adao -> db : 11: UPDATE Aluno
+ts -> tdao : 12: save(transacao)
+tdao -> db : 13: INSERT Transacao
 @enduml

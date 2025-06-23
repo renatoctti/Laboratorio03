@@ -1,24 +1,34 @@
-@startuml CadastroVantagem
+@startuml Diagrama de Comunicação - Cadastro de Vantagens (Empresa)
 skinparam handwritten false
 skinparam style strictuml
+skinparam linetype ortho ' Estilo de linha reta para melhor clareza nas conexões diretas
 
-title Diagrama de Comunicação - Cadastro de Vantagens (Empresa)
+
 
 actor Empresa as empresa
 
-participant EmpresaController as ec
-participant UsuarioService as us
-participant VantagemService as vs
-participant EmpresaDAO as edao
-participant VantagemDAO as vdao
+rectangle "EmpresaController" as ec
+rectangle "UsuarioService" as us
+rectangle "VantagemService" as vs
+rectangle "EmpresaDAO" as edao
+rectangle "VantagemDAO" as vdao
+rectangle "Banco de Dados" as db
+' Mensagens na ordem sequencial, focando APENAS nas chamadas de operação.
+' Não há setas de retorno. O retorno de dados é implícito na conclusão da chamada.
 
-database "Banco de Dados" as db
+' Fluxo para Exibir o Formulário (GET)
+empresa -> ec : 1: GET /home/empresa/cadastro-vantagem
+ec -> us : 2: findEmpresaByEmail(emailUsuarioLogado)
+us -> edao : 3: findByEmail(email)
+edao -> db : 4: SELECT Empresa
 
-empresa -> ec : 1.1: GET /cadastro-vantagem
-ec -> us : 1.2: findEmpresaByEmail()
-us -> edao : 1.3: findByEmail()
-edao -> db : 1.4: SELECT Empresa
-ec -> vs : 1.5: POST /cadastro-vantagem (dados) : 1.6: cadastrarVantagem(vantagem)
-vs -> vdao : 1.7: save(vantagem) : 1.8: INSERT Vantagem
-vdao -> db : 1.9: persiste()
+' Fluxo para Cadastrar a Vantagem (POST)
+empresa -> ec : 6: POST /home/empresa/cadastro-vantagem (dadosVantagem)
+ec -> us : 7: findEmpresaByEmail(emailUsuarioLogado)
+us -> edao : 8: findByEmail(email)
+edao -> db : 9: SELECT Empresa
+
+ec -> vs : 10: cadastrarVantagem(vantagemComDados, empresaAssociada)
+vs -> vdao : 11: save(vantagemComDados)
+vdao -> db : 12: INSERT/UPDATE Vantagem
 @enduml
