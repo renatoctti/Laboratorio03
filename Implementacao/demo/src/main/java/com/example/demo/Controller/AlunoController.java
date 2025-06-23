@@ -34,19 +34,25 @@ public class AlunoController {
     @Autowired
     UsuarioService usuarioService;
 
+    private Optional<Aluno> validarAlunoLogado(HttpSession session, RedirectAttributes redirectAttributes) {
+    Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
+    if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
+        redirectAttributes.addFlashAttribute("error", "Acesso negado.");
+        return Optional.empty();
+    }
+
+    Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
+    if (!alunoOpt.isPresent()) {
+        session.invalidate();
+        redirectAttributes.addFlashAttribute("error", "Aluno não encontrado.");
+    }
+    return alunoOpt;
+}
+
     @GetMapping
     public String homeAluno(HttpSession session, Model model) {
-        Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
-
-        if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
-            return "redirect:/login";
-        }
-
-        Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
-        if (!alunoOpt.isPresent()) {
-            session.invalidate();
-            return "redirect:/login?error=Aluno+nao+encontrado";
-        }
+        Optional<Aluno> alunoOpt = validarAlunoLogado(session, redirectAttributes);
+        if (!alunoOpt.isPresent()) return "redirect:/login";
         Aluno aluno = alunoOpt.get();
 
         model.addAttribute("aluno", aluno);
@@ -60,17 +66,8 @@ public class AlunoController {
 
     @GetMapping("/extrato")
     public String exibirExtratoAluno(HttpSession session, Model model) {
-        Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
-
-        if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
-            return "redirect:/login";
-        }
-
-        Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
-        if (!alunoOpt.isPresent()) {
-            session.invalidate();
-            return "redirect:/login?error=Aluno+nao+encontrado";
-        }
+        Optional<Aluno> alunoOpt = validarAlunoLogado(session, redirectAttributes);
+        if (!alunoOpt.isPresent()) return "redirect:/login";
         Aluno aluno = alunoOpt.get();
         session.setAttribute("usuarioLogado", aluno);
 
@@ -109,18 +106,8 @@ public class AlunoController {
             Model model,
             RedirectAttributes redirectAttributes
     ) {
-        Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
-
-        if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
-            return "redirect:/login";
-        }
-
-        Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
-        if (!alunoOpt.isPresent()) {
-            session.invalidate();
-            redirectAttributes.addFlashAttribute("error", "Aluno não encontrado.");
-            return "redirect:/login";
-        }
+        Optional<Aluno> alunoOpt = validarAlunoLogado(session, redirectAttributes);
+        if (!alunoOpt.isPresent()) return "redirect:/login";
         Aluno aluno = alunoOpt.get();
         session.setAttribute("usuarioLogado", aluno);
 
@@ -152,19 +139,8 @@ public class AlunoController {
             HttpSession session,
             RedirectAttributes redirectAttributes
     ) {
-        Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
-
-        if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
-            redirectAttributes.addFlashAttribute("error", "Acesso negado.");
-            return "redirect:/login";
-        }
-
-        Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
-        if (!alunoOpt.isPresent()) {
-            redirectAttributes.addFlashAttribute("error", "Aluno não encontrado.");
-            session.invalidate();
-            return "redirect:/login";
-        }
+        Optional<Aluno> alunoOpt = validarAlunoLogado(session, redirectAttributes);
+        if (!alunoOpt.isPresent()) return "redirect:/login";
         Aluno aluno = alunoOpt.get();
 
         Optional<Vantagem> vantagemOpt = vantagemService.buscarVantagemPorId(vantagemId);
@@ -190,21 +166,9 @@ public class AlunoController {
 
     @GetMapping("/minhas-vantagens")
     public String minhasVantagens(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
-        Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
-
-        if (usuarioLogado == null || !usuarioLogado.getRole().equals("ALUNO")) {
-            redirectAttributes.addFlashAttribute("error", "Acesso negado.");
-            return "redirect:/login";
-        }
-
-        Optional<Aluno> alunoOpt = usuarioService.findAlunoById(usuarioLogado.getId());
-        if (!alunoOpt.isPresent()) {
-            session.invalidate();
-            redirectAttributes.addFlashAttribute("error", "Aluno não encontrado.");
-            return "redirect:/login";
-        }
+        Optional<Aluno> alunoOpt = validarAlunoLogado(session, redirectAttributes);
+        if (!alunoOpt.isPresent()) return "redirect:/login";
         Aluno aluno = alunoOpt.get();
-        session.setAttribute("usuarioLogado", aluno);
 
         List<Vantagem> minhasVantagens = vantagemService.listarVantagensCompradasPorAluno(aluno);
         model.addAttribute("minhasVantagens", minhasVantagens);
