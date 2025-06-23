@@ -1,3 +1,67 @@
+# Moeda Estudantil - Sistema de Mérito Acadêmico
+
+## Introdução
+Este projeto é um sistema web desenvolvido em Java com Spring Boot para gerenciar um programa de mérito estudantil baseado em moedas virtuais. Alunos recebem moedas por desempenho e comportamento, podendo trocá-las por vantagens oferecidas por empresas parceiras. Professores distribuem moedas e empresas cadastram benefícios. O sistema inclui autenticação, notificações por email e integração com banco de dados MySQL.
+
+## Configuração do Ambiente
+
+### Pré-requisitos
+- Java 21 ou superior
+- MySQL 8+
+- Git
+
+### Clonando o repositório
+```bash
+git clone https://github.com/renatoctti/Laboratorio03.git
+cd Laboratorio03/Implementacao/demo
+```
+
+### Configuração do Banco de Dados
+1. Crie um banco de dados MySQL chamado `moeda_estudantil`.
+2. Altere as credenciais do banco no arquivo `src/main/resources/application.properties`:
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/moeda_estudantil?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+spring.datasource.username=SEU_USUARIO
+spring.datasource.password=SUA_SENHA
+```
+
+### Configuração de Email
+No mesmo arquivo, configure um email válido para envio de notificações:
+```properties
+spring.mail.username=SEU_EMAIL@gmail.com
+spring.mail.password=SUA_SENHA_DE_APLICATIVO
+```
+## Build e Execução
+
+### Usando Maven Wrapper (recomendado)
+No Windows:
+```bash
+mvnw.cmd clean install
+mvnw.cmd spring-boot:run
+```
+No Linux/Mac:
+```bash
+./mvnw clean install
+./mvnw spring-boot:run
+```
+
+O sistema estará disponível em `http://localhost:8080`.
+
+---
+# Diagrama de Caso de Uso
+![Diagrama de caso de uso](Laboratorio03/Projeto/CasoDeUso/CasosdeUso.png)
+
+# Diagrama de classes
+![Diagrama de classes](Laboratorio03/Projeto/Classe/CasosdeUso.png)
+
+# Diagrama de componentes
+![Diagrama de componentes](Laboratorio03/Projeto/Componentes/DiagramaDeComponentes.png)
+
+# Diagrama de implantação
+![Diagrama de implantação](Laboratorio03/Projeto/Implantacao/DiagramaDeImpplantacap.png)
+
+---
+
 # Histórias de Usuário
 
 ## Aluno
